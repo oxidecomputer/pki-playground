@@ -1,0 +1,167 @@
+key-pair "Gimlet RoT Stage0 Code Signing Engineering Offline CA A" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Engineering Offline CA B" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer B1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer B2" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Production Offline CA A" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Production Offline CA B" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer A1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer A2" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer B1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer B2" {
+    rsa num-bits=4096
+}
+
+entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA B" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Engineering Offline CA B"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer B1" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer B2" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Production Offline CA A" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Production Offline CA A"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Production Offline CA B" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Production Offline CA B"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Production Online Signer A1" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A1"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Production Online Signer A2" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A2"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Production Online Signer B1" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A1"
+}
+
+entity "Gimlet RoT Stage0 Code Signing Production Online Signer B2" {
+    country-name "US"
+    state-or-province-name "California"
+    locality-name "Emeryville"
+    organization-name "Oxide Computer Company"
+    organizational-unit-name "Manufacturing"
+    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A2"
+}
+
+certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Anchor" {
+    subject-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    subject-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    issuer-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    issuer-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+
+    not-after "99991231235959Z"
+    extensions {
+        basic-constraints ca=true key-usage="keyCertSign"
+    }
+}
