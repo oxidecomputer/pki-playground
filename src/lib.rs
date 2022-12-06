@@ -1,6 +1,7 @@
 use miette::{IntoDiagnostic, Result};
-use pkcs8::{EncodePrivateKey, DecodePrivateKey};
+use pkcs8::{EncodePrivateKey, DecodePrivateKey, der::{AnyRef, asn1::{Utf8StringRef, SetOfVec}}};
 use rsa::{RsaPrivateKey, PublicKeyParts, BigUint};
+use x509_cert::{attr::AttributeTypeAndValue, name::{RdnSequence, RelativeDistinguishedName, Name}};
 use zeroize::Zeroizing;
 
 pub mod config;
@@ -71,5 +72,85 @@ impl KeyPair for RsaKeyPair {
 
     fn to_pkcs8_pem(&self) -> Result<Zeroizing<String>> {
         self.private_key.to_pkcs8_pem(pkcs8::LineEnding::CRLF).into_diagnostic()
+    }
+}
+
+#[derive(Debug)]
+pub struct Entity<'a> {
+    name: String,
+    distinguished_name: Name<'a>,
+}
+
+impl<'a> Entity<'a> {
+    pub fn name(&'a self) -> &'a str {
+        return &self.name
+    }
+}
+
+impl<'a> std::fmt::Display for Entity<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Entity: {} => {}", self.name, self.distinguished_name)
+    }
+}
+
+impl<'a> TryFrom<&'a config::Entity> for Entity<'a> {
+    type Error = miette::Error;
+
+    fn try_from(value: &'a config::Entity) -> Result<Self, Self::Error> {
+        let mut rdns = Vec::new();
+
+        for base_dn_attr in &value.base_dn {
+            let atv = match base_dn_attr {
+                config::EntityNameComponent::CountryName(x) => {
+                    AttributeTypeAndValue{
+                        oid: const_oid::db::rfc4519::CN,
+                        value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?)
+                    }
+                },
+                config::EntityNameComponent::StateOrProvinceName(x) => {
+                    AttributeTypeAndValue{
+                        oid: const_oid::db::rfc4519::ST,
+                        value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?)
+                    }
+                },
+                config::EntityNameComponent::LocalityName(x) => {
+                    AttributeTypeAndValue{
+                        oid: const_oid::db::rfc4519::L,
+                        value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?)
+                    }
+                },
+                config::EntityNameComponent::OrganizationalUnitName(x) => {
+                    AttributeTypeAndValue{
+                        oid: const_oid::db::rfc4519::OU,
+                        value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?)
+                    }
+                },
+                config::EntityNameComponent::OrganizationName(x) => {
+                    AttributeTypeAndValue{
+                        oid: const_oid::db::rfc4519::O,
+                        value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?)
+                    }
+                }
+            };
+
+            rdns.push([atv]);
+        }
+
+        rdns.push([AttributeTypeAndValue{
+            oid: const_oid::db::rfc4519::CN,
+            value: AnyRef::from(Utf8StringRef::new(&value.common_name).into_diagnostic()?)
+        }]);
+
+        let mut brdns = RdnSequence::default();
+        for rdn in rdns {
+            let sofv = SetOfVec::try_from(rdn.to_vec()).into_diagnostic()?;
+            brdns.0.push(RelativeDistinguishedName::from(sofv));
+        }
+
+
+        Ok(Self{
+            name: value.name.clone(),
+            distinguished_name: brdns
+        })
     }
 }
