@@ -163,7 +163,7 @@ certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Ancho
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
-        basic-constraints ca=true key-usage="keyCertSign"
+        basic-constraints critical=true ca=true
     }
 
     serial-number 1
@@ -180,5 +180,7 @@ certificate "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
     not-after "9999-12-31T23:59:59Z"
     serial-number 0x3cc3000000000000
 
-    extensions {}
+    extensions {
+        basic-constraints critical=true ca=false
+    }
 }

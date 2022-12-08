@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use const_oid::{AssociatedOid, ObjectIdentifier};
 use miette::{IntoDiagnostic, Result};
 use pkcs1::der::Encode;
 use pkcs8::{
@@ -16,6 +17,7 @@ use sha2::Digest;
 use sha2::Sha256;
 use x509_cert::{
     attr::AttributeTypeAndValue,
+    ext::pkix::BasicConstraints,
     name::{Name, RdnSequence, RelativeDistinguishedName},
 };
 use zeroize::Zeroizing;
@@ -209,5 +211,58 @@ impl<'a> TryFrom<&'a config::Entity> for Entity<'a> {
             name: value.name.clone(),
             distinguished_name: brdns,
         })
+    }
+}
+
+pub trait Extension {
+    fn oid(&self) -> ObjectIdentifier;
+
+    fn is_critical(&self) -> bool;
+
+    fn as_der(&self) -> &[u8];
+}
+
+impl dyn Extension {
+    pub fn from_config(config: &config::X509Extensions) -> Result<Box<dyn Extension>> {
+        match config {
+            config::X509Extensions::BasicConstraints(x) => {
+                Ok(Box::new(BasicConstraintsExtension::from_config(x)?))
+            }
+        }
+    }
+}
+
+pub struct BasicConstraintsExtension {
+    is_critical: bool,
+    der: Vec<u8>,
+}
+
+impl BasicConstraintsExtension {
+    pub fn from_config(config: &config::BasicConstraintsExtension) -> Result<Self> {
+        let der = BasicConstraints {
+            ca: config.ca,
+            path_len_constraint: None,
+        }
+        .to_vec()
+        .into_diagnostic()?;
+
+        Ok(BasicConstraintsExtension {
+            is_critical: config.critical,
+            der: der,
+        })
+    }
+}
+
+impl Extension for BasicConstraintsExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        x509_cert::ext::pkix::BasicConstraints::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
     }
 }

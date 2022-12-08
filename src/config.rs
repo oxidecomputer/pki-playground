@@ -103,10 +103,10 @@ pub enum X509Extensions {
 #[derive(knuffel::Decode, Debug)]
 pub struct BasicConstraintsExtension {
     #[knuffel(property)]
-    pub ca: bool,
+    pub critical: bool,
 
     #[knuffel(property)]
-    pub key_usage: String,
+    pub ca: bool,
 }
 
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {

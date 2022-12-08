@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use clap::Parser;
-use const_oid::AssociatedOid;
 use miette::{Context, IntoDiagnostic, Result};
 use pkcs1::der::asn1::BitStringRef;
 use pkcs1::der::{Decode, Encode};
@@ -11,8 +10,7 @@ use pkcs1::UIntRef;
 use pkcs8::der::asn1::GeneralizedTime;
 use pkcs8::der::DateTime;
 use pkcs8::SubjectPublicKeyInfo;
-use pki_playground::config::BasicConstraintsExtension;
-use pki_playground::KeyPair;
+use pki_playground::{Extension, KeyPair};
 use rsa::BigUint;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
@@ -20,8 +18,6 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::SystemTime;
-use x509_cert::ext::pkix::BasicConstraints;
-use x509_cert::ext::Extension;
 use x509_cert::time::Validity;
 use x509_cert::{Certificate, TbsCertificate};
 
@@ -119,18 +115,18 @@ fn main() -> Result<()> {
                 // x509_cert::ext::Extension only takes a reference to the
                 // payload.
                 let mut extensions = Vec::new();
+                for extension_config in &cert_config.extensions {
+                    extensions.push(<dyn Extension>::from_config(extension_config)?)
+                }
 
-                let basic_ca_ext = BasicConstraints {
-                    ca: true,
-                    path_len_constraint: None,
-                };
-                let basic_ca_ext_der = basic_ca_ext.to_vec().into_diagnostic()?;
-
-                extensions.push(Extension {
-                    extn_id: BasicConstraints::OID,
-                    critical: true,
-                    extn_value: &basic_ca_ext_der,
-                });
+                let mut cert_extensions = Vec::new();
+                for extension in &extensions {
+                    cert_extensions.push(x509_cert::ext::Extension {
+                        extn_id: extension.oid(),
+                        critical: extension.is_critical(),
+                        extn_value: extension.as_der(),
+                    })
+                }
 
                 let tbs_cert = TbsCertificate {
                     version: x509_cert::Version::V3,
@@ -142,7 +138,7 @@ fn main() -> Result<()> {
                     subject_public_key_info: spki,
                     issuer_unique_id: None,
                     subject_unique_id: None,
-                    extensions: Some(extensions),
+                    extensions: Some(cert_extensions),
                 };
                 let tbs_cert_der = tbs_cert.to_vec().into_diagnostic()?;
 
