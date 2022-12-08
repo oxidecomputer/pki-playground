@@ -159,9 +159,26 @@ certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Ancho
     subject-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
     issuer-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
     issuer-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    digest-algorithm "sha-256"
 
-    not-after "99991231235959Z"
+    not-after "9999-12-31T23:59:59Z"
     extensions {
         basic-constraints ca=true key-usage="keyCertSign"
     }
+
+    serial-number 1
+}
+
+certificate "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
+    subject-entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+    subject-key "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+    issuer-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    issuer-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number 0x3cc3000000000000
+
+    extensions {}
 }

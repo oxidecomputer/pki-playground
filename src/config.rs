@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use miette::{Result, IntoDiagnostic};
+use miette::{IntoDiagnostic, Result};
 
 #[derive(knuffel::Decode, Debug)]
 pub struct Document {
@@ -72,15 +72,23 @@ pub struct Certificate {
     pub issuer_key: String,
 
     #[knuffel(child, unwrap(argument))]
-    pub not_before: Option<String>,
-    #[knuffel(child, unwrap(argument))]
-    pub not_after: Option<String>,
+    pub digest_algorithm: DigestAlgorithm,
 
     #[knuffel(child, unwrap(argument))]
-    pub serial_number: Option<u64>,
+    pub not_before: Option<String>,
+    #[knuffel(child, unwrap(argument))]
+    pub not_after: String,
+
+    #[knuffel(child, unwrap(argument))]
+    pub serial_number: u64,
 
     #[knuffel(child, unwrap(children))]
     pub extensions: Vec<X509Extensions>,
+}
+
+#[derive(knuffel::DecodeScalar, Debug)]
+pub enum DigestAlgorithm {
+    Sha_256,
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -97,48 +105,76 @@ pub struct BasicConstraintsExtension {
     pub key_usage: String,
 }
 
-pub fn load_and_validate(path: &std::path::Path) -> Result<Document>
-{
+pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
     let in_kdl = std::fs::read_to_string(path).into_diagnostic()?;
-    let doc: Document = knuffel::parse(&path.to_string_lossy(), &in_kdl).into_diagnostic()?;
+    let doc: Document = knuffel::parse(&path.to_string_lossy(), &in_kdl)?;
 
-    let mut kp_names : HashSet<&str> = HashSet::new();
+    let mut kp_names: HashSet<&str> = HashSet::new();
     for kp in &doc.key_pairs {
         if kp.key_type.len() != 1 {
-            miette::bail!("key pairs must have exactly one key type. key pair \"{}\" has {}.", kp.name, kp.key_type.len());
+            miette::bail!(
+                "key pairs must have exactly one key type. key pair \"{}\" has {}.",
+                kp.name,
+                kp.key_type.len()
+            );
         }
         if !kp_names.insert(&kp.name) {
-            miette::bail!("key pairs must have unique names. \"{}\" is used more than once.", kp.name)
+            miette::bail!(
+                "key pairs must have unique names. \"{}\" is used more than once.",
+                kp.name
+            )
         }
     }
 
-    let mut entity_names : HashSet<&str> = HashSet::new();
+    let mut entity_names: HashSet<&str> = HashSet::new();
     for entity in &doc.entities {
         if !entity_names.insert(&entity.name) {
-            miette::bail!("entities must have unique names. \"{}\" is used more than once.", entity.name)
+            miette::bail!(
+                "entities must have unique names. \"{}\" is used more than once.",
+                entity.name
+            )
         }
     }
 
     let mut cert_names: HashSet<&str> = HashSet::new();
     for cert in &doc.certificates {
         if !cert_names.insert(&cert.name) {
-            miette::bail!("certificates must have unique names. \"{}\" is used more than once.", cert.name)
+            miette::bail!(
+                "certificates must have unique names. \"{}\" is used more than once.",
+                cert.name
+            )
         }
 
         if let None = entity_names.get(cert.subject_entity.as_str()) {
-            miette::bail!("certificate \"{}\" subject entity \"{}\" does not exist", cert.name, cert.subject_key)
+            miette::bail!(
+                "certificate \"{}\" subject entity \"{}\" does not exist",
+                cert.name,
+                cert.subject_key
+            )
         }
 
         if let None = kp_names.get(cert.subject_key.as_str()) {
-            miette::bail!("certificate \"{}\" subject key pair \"{}\" does not exist", cert.name, cert.subject_key)
+            miette::bail!(
+                "certificate \"{}\" subject key pair \"{}\" does not exist",
+                cert.name,
+                cert.subject_key
+            )
         }
 
         if let None = entity_names.get(cert.issuer_entity.as_str()) {
-            miette::bail!("certificate \"{}\" issuer entity \"{}\" does not exist", cert.name, cert.issuer_key)
+            miette::bail!(
+                "certificate \"{}\" issuer entity \"{}\" does not exist",
+                cert.name,
+                cert.issuer_key
+            )
         }
 
         if let None = kp_names.get(cert.issuer_key.as_str()) {
-            miette::bail!("certificate \"{}\" issuer key pair \"{}\" does not exist", cert.name, cert.issuer_key)
+            miette::bail!(
+                "certificate \"{}\" issuer key pair \"{}\" does not exist",
+                cert.name,
+                cert.issuer_key
+            )
         }
     }
 
