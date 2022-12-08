@@ -5,21 +5,23 @@
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use flagset::FlagSet;
 use miette::{IntoDiagnostic, Result};
-use pkcs1::der::Encode;
+use pkcs1::der::{asn1::OctetStringRef, Encode};
 use pkcs8::{
     der::{
         asn1::{SetOfVec, Utf8StringRef},
         AnyRef,
     },
-    AlgorithmIdentifier, DecodePrivateKey, EncodePrivateKey, EncodePublicKey, SubjectPublicKeyInfo,
+    AlgorithmIdentifier, DecodePrivateKey, EncodePrivateKey, EncodePublicKey,
 };
 use rsa::{BigUint, PaddingScheme, PublicKeyParts, RsaPrivateKey};
+use sha1::Sha1;
 use sha2::Digest;
 use sha2::Sha256;
 use x509_cert::{
     attr::AttributeTypeAndValue,
     ext::pkix::{BasicConstraints, KeyUsage},
     name::{Name, RdnSequence, RelativeDistinguishedName},
+    TbsCertificate,
 };
 use zeroize::Zeroizing;
 
@@ -224,12 +226,16 @@ pub trait Extension {
 }
 
 impl dyn Extension {
-    pub fn from_config(config: &config::X509Extensions) -> Result<Box<dyn Extension>> {
+    pub fn from_config(
+        config: &config::X509Extensions,
+        tbs_cert: &TbsCertificate,
+    ) -> Result<Box<dyn Extension>> {
         match config {
             config::X509Extensions::BasicConstraints(x) => {
                 Ok(Box::new(BasicConstraintsExtension::from_config(x)?))
             }
             config::X509Extensions::KeyUsage(x) => Ok(Box::new(KeyUsageExtension::from_config(x)?)),
+            config::X509Extensions::SubjectKeyIdentifier(x) => Ok(Box::new(SubjectKeyIdentifierExtension::from_config(x, tbs_cert)?)),
         }
     }
 }
@@ -325,6 +331,46 @@ impl KeyUsageExtension {
 impl Extension for KeyUsageExtension {
     fn oid(&self) -> ObjectIdentifier {
         x509_cert::ext::pkix::KeyUsage::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+pub struct SubjectKeyIdentifierExtension {
+    is_critical: bool,
+    der: Vec<u8>,
+}
+
+impl SubjectKeyIdentifierExtension {
+    pub fn from_config(
+        config: &config::SubjectKeyIdentifierExtension,
+        tbs_cert: &TbsCertificate,
+    ) -> Result<Self> {
+        let subject_pub_key = tbs_cert.subject_public_key_info.subject_public_key;
+
+        let mut hasher = Sha1::new();
+        hasher.update(subject_pub_key);
+        let skid = hasher.finalize();
+
+        let der = x509_cert::ext::pkix::SubjectKeyIdentifier(
+            OctetStringRef::new(&skid).into_diagnostic()?,
+        );
+        Ok(SubjectKeyIdentifierExtension {
+            is_critical: config.critical,
+            der: der.to_vec().into_diagnostic()?,
+        })
+    }
+}
+
+impl Extension for SubjectKeyIdentifierExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        x509_cert::ext::pkix::SubjectKeyIdentifier::OID
     }
 
     fn is_critical(&self) -> bool {

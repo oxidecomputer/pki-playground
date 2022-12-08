@@ -167,6 +167,7 @@ certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Ancho
         key-usage critical=true {
             key-cert-sign
         }
+        subject-key-identifier critical=true
     }
 
     serial-number 1

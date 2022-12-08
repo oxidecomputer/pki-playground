@@ -110,13 +110,26 @@ fn main() -> Result<()> {
 
                 let serial_number = BigUint::from(cert_config.serial_number).to_bytes_be();
 
+                let mut tbs_cert = TbsCertificate {
+                    version: x509_cert::Version::V3,
+                    serial_number: UIntRef::new(&serial_number).into_diagnostic()?,
+                    signature: signature_algorithm,
+                    issuer: issuer_entity.distinguished_name().clone(),
+                    validity: validity,
+                    subject: subject_entity.distinguished_name().clone(),
+                    subject_public_key_info: spki,
+                    issuer_unique_id: None,
+                    subject_unique_id: None,
+                    extensions: None,
+                };
+
                 // TODO: Generate extensions from config.  Need an intermediate
                 // object to store DER-encoded form of extension payload as
                 // x509_cert::ext::Extension only takes a reference to the
                 // payload.
                 let mut extensions = Vec::new();
                 for extension_config in &cert_config.extensions {
-                    extensions.push(<dyn Extension>::from_config(extension_config)?)
+                    extensions.push(<dyn Extension>::from_config(extension_config, &tbs_cert)?)
                 }
 
                 let mut cert_extensions = Vec::new();
@@ -128,18 +141,7 @@ fn main() -> Result<()> {
                     })
                 }
 
-                let tbs_cert = TbsCertificate {
-                    version: x509_cert::Version::V3,
-                    serial_number: UIntRef::new(&serial_number).into_diagnostic()?,
-                    signature: signature_algorithm,
-                    issuer: issuer_entity.distinguished_name().clone(),
-                    validity: validity,
-                    subject: subject_entity.distinguished_name().clone(),
-                    subject_public_key_info: spki,
-                    issuer_unique_id: None,
-                    subject_unique_id: None,
-                    extensions: Some(cert_extensions),
-                };
+                tbs_cert.extensions = Some(cert_extensions);
                 let tbs_cert_der = tbs_cert.to_vec().into_diagnostic()?;
 
                 let cert_signature = issuer_kp

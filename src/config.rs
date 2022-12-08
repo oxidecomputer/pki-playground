@@ -99,6 +99,7 @@ pub enum DigestAlgorithm {
 pub enum X509Extensions {
     BasicConstraints(BasicConstraintsExtension),
     KeyUsage(KeyUsageExtension),
+    SubjectKeyIdentifier(SubjectKeyIdentifierExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -141,6 +142,12 @@ pub struct KeyUsageExtension {
 
     #[knuffel(child)]
     pub decipher_only: bool,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct SubjectKeyIdentifierExtension {
+    #[knuffel(property)]
+    pub critical: bool,
 }
 
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
