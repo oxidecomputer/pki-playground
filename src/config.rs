@@ -93,8 +93,8 @@ pub struct Certificate {
 }
 
 #[derive(knuffel::DecodeScalar, Debug)]
+#[allow(non_camel_case_types)]
 pub enum DigestAlgorithm {
-    #[allow(non_camel_case_types)]
     Sha_256,
 }
 
