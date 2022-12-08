@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use const_oid::{AssociatedOid, ObjectIdentifier};
+use flagset::FlagSet;
 use miette::{IntoDiagnostic, Result};
 use pkcs1::der::Encode;
 use pkcs8::{
@@ -17,7 +18,7 @@ use sha2::Digest;
 use sha2::Sha256;
 use x509_cert::{
     attr::AttributeTypeAndValue,
-    ext::pkix::BasicConstraints,
+    ext::pkix::{BasicConstraints, KeyUsage},
     name::{Name, RdnSequence, RelativeDistinguishedName},
 };
 use zeroize::Zeroizing;
@@ -228,6 +229,7 @@ impl dyn Extension {
             config::X509Extensions::BasicConstraints(x) => {
                 Ok(Box::new(BasicConstraintsExtension::from_config(x)?))
             }
+            config::X509Extensions::KeyUsage(x) => Ok(Box::new(KeyUsageExtension::from_config(x)?)),
         }
     }
 }
@@ -256,6 +258,73 @@ impl BasicConstraintsExtension {
 impl Extension for BasicConstraintsExtension {
     fn oid(&self) -> ObjectIdentifier {
         x509_cert::ext::pkix::BasicConstraints::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+pub struct KeyUsageExtension {
+    is_critical: bool,
+    der: Vec<u8>,
+}
+
+impl KeyUsageExtension {
+    pub fn from_config(config: &config::KeyUsageExtension) -> Result<Self> {
+        let mut key_usage_flags = FlagSet::default();
+        if config.digital_signature {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::DigitalSignature
+        }
+
+        if config.non_repudiation {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::NonRepudiation
+        }
+
+        if config.key_encipherment {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::KeyEncipherment
+        }
+
+        if config.data_encipherment {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::DataEncipherment
+        }
+
+        if config.key_agreement {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::KeyAgreement
+        }
+
+        if config.key_cert_sign {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::KeyCertSign
+        }
+
+        if config.crl_sign {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::CRLSign
+        }
+
+        if config.encipher_only {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::EncipherOnly
+        }
+
+        if config.decipher_only {
+            key_usage_flags |= x509_cert::ext::pkix::KeyUsages::DecipherOnly
+        }
+
+        let der = KeyUsage(key_usage_flags).to_vec().into_diagnostic()?;
+
+        Ok(KeyUsageExtension {
+            is_critical: config.critical,
+            der: der,
+        })
+    }
+}
+
+impl Extension for KeyUsageExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        x509_cert::ext::pkix::KeyUsage::OID
     }
 
     fn is_critical(&self) -> bool {

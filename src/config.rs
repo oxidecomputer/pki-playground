@@ -98,6 +98,7 @@ pub enum DigestAlgorithm {
 #[derive(knuffel::Decode, Debug)]
 pub enum X509Extensions {
     BasicConstraints(BasicConstraintsExtension),
+    KeyUsage(KeyUsageExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -107,6 +108,39 @@ pub struct BasicConstraintsExtension {
 
     #[knuffel(property)]
     pub ca: bool,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct KeyUsageExtension {
+    #[knuffel(property)]
+    pub critical: bool,
+
+    #[knuffel(child)]
+    pub digital_signature: bool,
+
+    #[knuffel(child)]
+    pub non_repudiation: bool,
+
+    #[knuffel(child)]
+    pub key_encipherment: bool,
+
+    #[knuffel(child)]
+    pub data_encipherment: bool,
+
+    #[knuffel(child)]
+    pub key_agreement: bool,
+
+    #[knuffel(child)]
+    pub key_cert_sign: bool,
+
+    #[knuffel(child)]
+    pub crl_sign: bool,
+
+    #[knuffel(child)]
+    pub encipher_only: bool,
+
+    #[knuffel(child)]
+    pub decipher_only: bool,
 }
 
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {

@@ -545,6 +545,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "const-oid",
+ "flagset",
  "knuffel",
  "miette",
  "pkcs1",
