@@ -160,7 +160,7 @@ fn main() -> Result<()> {
                     serial_number: UIntRef::new(&serial_number).into_diagnostic()?,
                     signature: signature_algorithm,
                     issuer: issuer_dn,
-                    validity: validity,
+                    validity,
                     subject: subject_entity.distinguished_name().clone(),
                     subject_public_key_info: spki,
                     issuer_unique_id: None,
@@ -198,7 +198,7 @@ fn main() -> Result<()> {
                     .wrap_err("signing cert")?;
                 let cert = Certificate {
                     tbs_certificate: tbs_cert,
-                    signature_algorithm: signature_algorithm,
+                    signature_algorithm,
                     signature: BitStringRef::from_bytes(&cert_signature).into_diagnostic()?,
                 };
 

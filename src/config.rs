@@ -235,7 +235,7 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
     }
 
     for cert in &doc.certificates {
-        if let None = entity_names.get(cert.subject_entity.as_str()) {
+        if entity_names.get(cert.subject_entity.as_str()).is_none() {
             miette::bail!(
                 "certificate \"{}\" subject entity \"{}\" does not exist",
                 cert.name,
@@ -243,7 +243,7 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
             )
         }
 
-        if let None = kp_names.get(cert.subject_key.as_str()) {
+        if kp_names.get(cert.subject_key.as_str()).is_none() {
             miette::bail!(
                 "certificate \"{}\" subject key pair \"{}\" does not exist",
                 cert.name,
@@ -255,7 +255,7 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
             (None, None) => miette::bail!("certificate \"{}\" must specify either an issuer entity or certificate", cert.name),
             (Some(_), Some(_)) => miette::bail!("certificate \"{}\" specifies both an issuer entity and certificate.  Only one may be specified.", cert.name),
             (Some(entity), None) => {
-                if let None = entity_names.get(entity.as_str()) {
+                if entity_names.get(entity.as_str()).is_none() {
                     miette::bail!(
                         "certificate \"{}\" issuer entity \"{}\" does not exist",
                         cert.name,
@@ -264,7 +264,7 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
                 }
             }
             (None, Some(cert_name)) => {
-                if let None = cert_names.get(cert_name.as_str()) {
+                if cert_names.get(cert_name.as_str()).is_none() {
                     miette::bail!(
                         "certificate \"{}\" issuer certificate \"{}\" does not exist",
                         cert.name,
@@ -274,7 +274,7 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
             }
         }
 
-        if let None = kp_names.get(cert.issuer_key.as_str()) {
+        if kp_names.get(cert.issuer_key.as_str()).is_none() {
             miette::bail!(
                 "certificate \"{}\" issuer key pair \"{}\" does not exist",
                 cert.name,
