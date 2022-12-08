@@ -43,13 +43,13 @@ pub trait KeyPair {
 impl dyn KeyPair {
     pub fn new(config: &config::KeyPair) -> Result<Box<dyn KeyPair>> {
         match &config.key_type[0] {
-            config::KeyType::Rsa(x) => RsaKeyPair::new(&config.name, &x),
+            config::KeyType::Rsa(x) => Ok(Box::new(RsaKeyPair::new(&config.name, x)?)),
         }
     }
 
     pub fn from_pem(config: &config::KeyPair, s: &str) -> Result<Box<dyn KeyPair>> {
         match &config.key_type[0] {
-            config::KeyType::Rsa(x) => RsaKeyPair::from_pem(&config.name, &x, s),
+            config::KeyType::Rsa(x) => Ok(Box::new(RsaKeyPair::from_pem(&config.name, x, s)?)),
         }
     }
 }
@@ -60,7 +60,7 @@ pub struct RsaKeyPair {
 }
 
 impl RsaKeyPair {
-    pub fn new(name: &str, config: &config::RsaKeyConfig) -> Result<Box<dyn KeyPair>> {
+    pub fn new(name: &str, config: &config::RsaKeyConfig) -> Result<Self> {
         let mut rng = rand::thread_rng();
         let private_key = Zeroizing::new(
             rsa::algorithms::generate_multi_prime_key_with_exp(
@@ -72,17 +72,13 @@ impl RsaKeyPair {
             .into_diagnostic()?,
         );
 
-        Ok(Box::new(RsaKeyPair {
+        Ok(RsaKeyPair {
             name: name.into(),
-            private_key: private_key,
-        }))
+            private_key,
+        })
     }
 
-    pub fn from_pem(
-        name: &str,
-        config: &config::RsaKeyConfig,
-        s: &str,
-    ) -> Result<Box<dyn KeyPair>> {
+    pub fn from_pem(name: &str, config: &config::RsaKeyConfig, s: &str) -> Result<Self> {
         let private_key = Zeroizing::new(RsaPrivateKey::from_pkcs8_pem(s).into_diagnostic()?);
         if private_key.size() * 8 != config.num_bits {
             miette::bail!(
@@ -100,10 +96,10 @@ impl RsaKeyPair {
             )
         }
 
-        Ok(Box::new(Self {
+        Ok(Self {
             name: name.into(),
-            private_key: private_key,
-        }))
+            private_key,
+        })
     }
 }
 
@@ -154,11 +150,11 @@ pub struct Entity<'a> {
 
 impl<'a> Entity<'a> {
     pub fn name(&'a self) -> &'a str {
-        return &self.name;
+        &self.name
     }
 
     pub fn distinguished_name(&'a self) -> &Name<'a> {
-        return &self.distinguished_name;
+        &self.distinguished_name
     }
 }
 
@@ -267,7 +263,7 @@ impl BasicConstraintsExtension {
 
         Ok(BasicConstraintsExtension {
             is_critical: config.critical,
-            der: der,
+            der,
         })
     }
 }
@@ -334,7 +330,7 @@ impl KeyUsageExtension {
 
         Ok(KeyUsageExtension {
             is_critical: config.critical,
-            der: der,
+            der,
         })
     }
 }
@@ -498,15 +494,15 @@ impl AuthorityKeyIdentifierExtension {
 
         let der = x509_cert::ext::pkix::AuthorityKeyIdentifier {
             key_identifier: authority_key_identifier,
-            authority_cert_issuer: authority_cert_issuer,
-            authority_cert_serial_number: authority_cert_serial_number,
+            authority_cert_issuer,
+            authority_cert_serial_number,
         }
         .to_vec()
         .into_diagnostic()?;
 
         Ok(AuthorityKeyIdentifierExtension {
             is_critical: config.critical,
-            der: der,
+            der,
         })
     }
 }
