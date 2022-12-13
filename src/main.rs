@@ -72,7 +72,12 @@ fn main() -> Result<()> {
             let mut key_pairs = HashMap::new();
             for kp_config in &doc.key_pairs {
                 let kp_filename = format!("{}.key.pem", kp_config.name);
-                let kp_pem = std::fs::read_to_string(kp_filename).into_diagnostic()?;
+                let kp_pem = std::fs::read_to_string(&kp_filename)
+                    .into_diagnostic()
+                    .wrap_err(format!(
+                        "Unable to load key pair \"{}\" from \"{}\"",
+                        kp_config.name, &kp_filename
+                    ))?;
                 let kp = <dyn KeyPair>::from_pem(kp_config, &kp_pem)?;
                 key_pairs.insert(String::from(kp.name()), kp);
             }
@@ -101,10 +106,12 @@ fn main() -> Result<()> {
                         let mut issuer_cert_file = std::fs::File::open(&issuer_cert_filename)
                             .into_diagnostic()
                             .wrap_err(format!(
-                                "Certificate \"{}\" does not exist",
-                                &issuer_cert_filename
+                                "Unable to load issuer certificate \"{}\" from file \"{}\"",
+                                issuer_cert_name, issuer_cert_filename
                             ))?;
-                        issuer_cert_file.read_to_end(&mut issuer_cert_der).into_diagnostic()?;
+                        issuer_cert_file
+                            .read_to_end(&mut issuer_cert_der)
+                            .into_diagnostic()?;
                         Some(issuer_cert_der)
                     } else {
                         None
