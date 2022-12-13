@@ -1,164 +1,164 @@
-key-pair "Gimlet RoT Stage0 Code Signing Engineering Offline CA A" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Engineering Offline CA B" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA B" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A2" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer B1" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer B1" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Engineering Online Signer B2" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer B2" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Production Offline CA A" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline CA A" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Production Offline CA B" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline CA B" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer A1" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A1" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer A2" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A2" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer B1" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer B1" {
     rsa num-bits=4096
 }
 
-key-pair "Gimlet RoT Stage0 Code Signing Production Online Signer B2" {
+key-pair "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer B2" {
     rsa num-bits=4096
 }
 
-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA B" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA B" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Engineering Offline CA B"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA B"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A2" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A2"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer B1" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer B1" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer B2" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer B2" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Engineering Online Signer A2"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A2"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Production Offline CA A" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline CA A" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Production Offline CA A"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline CA A"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Production Offline CA B" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline CA B" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Production Offline CA B"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline CA B"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Production Online Signer A1" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A1" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A1"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A1"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Production Online Signer A2" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A2" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A2"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A2"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Production Online Signer B1" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer B1" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A1"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A1"
 }
 
-entity "Gimlet RoT Stage0 Code Signing Production Online Signer B2" {
+entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer B2" {
     country-name "US"
     state-or-province-name "California"
     locality-name "Emeryville"
     organization-name "Oxide Computer Company"
     organizational-unit-name "Manufacturing"
-    common-name "Gimlet RoT Stage0 Code Signing Production Online Signer A2"
+    common-name "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A2"
 }
 
-certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Anchor" {
-    subject-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
-    subject-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
-    issuer-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
-    issuer-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Anchor" {
+    subject-entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    subject-key "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    issuer-entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    issuer-key "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
@@ -173,11 +173,11 @@ certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Ancho
     serial-number 1
 }
 
-certificate "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
-    subject-entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
-    subject-key "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
-    issuer-certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Anchor"
-    issuer-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
+    subject-entity "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+    subject-key "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
+    issuer-certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Anchor"
+    issuer-key "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
 
     digest-algorithm "sha-256"
 
