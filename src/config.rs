@@ -103,6 +103,7 @@ pub enum X509Extensions {
     KeyUsage(KeyUsageExtension),
     SubjectKeyIdentifier(SubjectKeyIdentifierExtension),
     AuthorityKeyIdentifier(AuthorityKeyIdentifierExtension),
+    ExtendedKeyUsage(ExtendedKeyUsageExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -145,6 +146,30 @@ pub struct KeyUsageExtension {
 
     #[knuffel(child)]
     pub decipher_only: bool,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct ExtendedKeyUsageExtension {
+    #[knuffel(property)]
+    pub critical: bool,
+
+    #[knuffel(child)]
+    pub id_kp_server_auth: bool,
+
+    #[knuffel(child)]
+    pub id_kp_client_auth: bool,
+
+    #[knuffel(child)]
+    pub id_kp_code_signing: bool,
+
+    #[knuffel(child)]
+    pub id_kp_email_protection: bool,
+
+    #[knuffel(child)]
+    pub id_kp_time_stamping: bool,
+
+    #[knuffel(child)]
+    pub id_kp_ocspsigning: bool,
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -235,7 +260,7 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
                         cert.name,
                         cert.issuer_key
                     )
-                }        
+                }
             }
             (None, Some(cert_name)) => {
                 if let None = cert_names.get(cert_name.as_str()) {

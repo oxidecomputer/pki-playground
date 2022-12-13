@@ -25,6 +25,8 @@ use x509_cert::{
 };
 use zeroize::Zeroizing;
 
+use const_oid::db::rfc5912;
+
 pub mod config;
 
 pub trait KeyPair {
@@ -242,6 +244,9 @@ impl dyn Extension {
             config::X509Extensions::AuthorityKeyIdentifier(x) => Ok(Box::new(
                 AuthorityKeyIdentifierExtension::from_config(x, tbs_cert, issuer_cert)?,
             )),
+            config::X509Extensions::ExtendedKeyUsage(x) => {
+                Ok(Box::new(ExtendedKeyUsageExtension::from_config(x)?))
+            }
         }
     }
 }
@@ -330,6 +335,61 @@ impl KeyUsageExtension {
         Ok(KeyUsageExtension {
             is_critical: config.critical,
             der: der,
+        })
+    }
+}
+
+pub struct ExtendedKeyUsageExtension {
+    is_critical: bool,
+    der: Vec<u8>,
+}
+
+impl Extension for ExtendedKeyUsageExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        x509_cert::ext::pkix::ExtendedKeyUsage::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+impl ExtendedKeyUsageExtension {
+    pub(crate) fn from_config(config: &config::ExtendedKeyUsageExtension) -> Result<Self> {
+        let mut der = Vec::new();
+        if config.id_kp_client_auth {
+            der.push(rfc5912::ID_KP_CLIENT_AUTH);
+        }
+
+        if config.id_kp_server_auth {
+            der.push(rfc5912::ID_KP_SERVER_AUTH);
+        }
+
+        if config.id_kp_code_signing {
+            der.push(rfc5912::ID_KP_CODE_SIGNING);
+        }
+
+        if config.id_kp_email_protection {
+            der.push(rfc5912::ID_KP_EMAIL_PROTECTION);
+        }
+
+        if config.id_kp_time_stamping {
+            der.push(rfc5912::ID_KP_TIME_STAMPING);
+        }
+
+        if config.id_kp_ocspsigning {
+            der.push(rfc5912::ID_KP_OCSP_SIGNING);
+        }
+
+        let ext_key_usage = x509_cert::ext::pkix::ExtendedKeyUsage(der);
+
+        Ok(ExtendedKeyUsageExtension {
+            der: ext_key_usage.to_vec().into_diagnostic()?,
+            is_critical: config.critical,
         })
     }
 }

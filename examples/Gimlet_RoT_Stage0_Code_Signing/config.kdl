@@ -411,5 +411,8 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
             key-id
             issuer
         }
+        extended-key-usage critical=false {
+            id-kp-client-auth
+        }
     }
 }
