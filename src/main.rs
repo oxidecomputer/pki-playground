@@ -14,7 +14,7 @@ use pki_playground::{Extension, KeyPair};
 use rsa::BigUint;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::SystemTime;
@@ -83,11 +83,49 @@ fn main() -> Result<()> {
                 entities.insert(String::from(entity.name()), entity);
             }
 
+            // let mut certs_to_generate = Vec::new();
+            // for cert_config in &doc.certificates {
+            //     if let Some(x) = &cert_config.issuer_entity {
+            //         certs_to_generate.push(cert_config);
+            //     }
+            // }
+
             for cert_config in &doc.certificates {
                 let subject_entity = entities.get(&cert_config.subject_entity).unwrap();
                 let subject_kp = key_pairs.get(&cert_config.subject_key).unwrap();
 
-                let issuer_entity = entities.get(&cert_config.issuer_entity).unwrap();
+                let issuer_cert_der =
+                    if let Some(issuer_cert_name) = &cert_config.issuer_certificate {
+                        let issuer_cert_filename = format!("{}.cert.der", issuer_cert_name);
+                        let mut issuer_cert_der = Vec::new();
+                        let mut issuer_cert_file = std::fs::File::open(&issuer_cert_filename)
+                            .into_diagnostic()
+                            .wrap_err(format!(
+                                "Certificate \"{}\" does not exist",
+                                &issuer_cert_filename
+                            ))?;
+                        issuer_cert_file.read_to_end(&mut issuer_cert_der).into_diagnostic()?;
+                        Some(issuer_cert_der)
+                    } else {
+                        None
+                    };
+
+                let issuer_cert = if let Some(issuer_cert_der) = &issuer_cert_der {
+                    Some(x509_cert::Certificate::from_der(issuer_cert_der).into_diagnostic()?)
+                } else {
+                    None
+                };
+
+                let issuer_dn = if let Some(issuer_cert) = &issuer_cert {
+                    issuer_cert.tbs_certificate.subject.clone()
+                } else {
+                    entities
+                        .get(cert_config.issuer_entity.as_ref().unwrap())
+                        .unwrap()
+                        .distinguished_name()
+                        .clone()
+                };
+
                 let issuer_kp = key_pairs.get(&cert_config.issuer_key).unwrap();
 
                 let not_after = GeneralizedTime::from(
@@ -114,7 +152,7 @@ fn main() -> Result<()> {
                     version: x509_cert::Version::V3,
                     serial_number: UIntRef::new(&serial_number).into_diagnostic()?,
                     signature: signature_algorithm,
-                    issuer: issuer_entity.distinguished_name().clone(),
+                    issuer: issuer_dn,
                     validity: validity,
                     subject: subject_entity.distinguished_name().clone(),
                     subject_public_key_info: spki,
@@ -129,7 +167,11 @@ fn main() -> Result<()> {
                 // payload.
                 let mut extensions = Vec::new();
                 for extension_config in &cert_config.extensions {
-                    extensions.push(<dyn Extension>::from_config(extension_config, &tbs_cert)?)
+                    extensions.push(<dyn Extension>::from_config(
+                        extension_config,
+                        &tbs_cert,
+                        issuer_cert.as_ref(),
+                    )?)
                 }
 
                 let mut cert_extensions = Vec::new();

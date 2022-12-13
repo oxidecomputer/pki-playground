@@ -71,7 +71,9 @@ pub struct Certificate {
     pub subject_key: String,
 
     #[knuffel(child, unwrap(argument))]
-    pub issuer_entity: String,
+    pub issuer_entity: Option<String>,
+    #[knuffel(child, unwrap(argument))]
+    pub issuer_certificate: Option<String>,
     #[knuffel(child, unwrap(argument))]
     pub issuer_key: String,
 
@@ -100,6 +102,7 @@ pub enum X509Extensions {
     BasicConstraints(BasicConstraintsExtension),
     KeyUsage(KeyUsageExtension),
     SubjectKeyIdentifier(SubjectKeyIdentifierExtension),
+    AuthorityKeyIdentifier(AuthorityKeyIdentifierExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -150,6 +153,18 @@ pub struct SubjectKeyIdentifierExtension {
     pub critical: bool,
 }
 
+#[derive(knuffel::Decode, Debug)]
+pub struct AuthorityKeyIdentifierExtension {
+    #[knuffel(property)]
+    pub critical: bool,
+
+    #[knuffel(child)]
+    pub key_id: bool,
+
+    #[knuffel(child)]
+    pub issuer: bool,
+}
+
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
     let in_kdl = std::fs::read_to_string(path).into_diagnostic()?;
     let doc: Document = knuffel::parse(&path.to_string_lossy(), &in_kdl)?;
@@ -181,6 +196,8 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
         }
     }
 
+    // Certificates can name other certificates as their issuer so need to
+    // gather all the names before checking validity.
     let mut cert_names: HashSet<&str> = HashSet::new();
     for cert in &doc.certificates {
         if !cert_names.insert(&cert.name) {
@@ -189,7 +206,9 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
                 cert.name
             )
         }
+    }
 
+    for cert in &doc.certificates {
         if let None = entity_names.get(cert.subject_entity.as_str()) {
             miette::bail!(
                 "certificate \"{}\" subject entity \"{}\" does not exist",
@@ -206,12 +225,27 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
             )
         }
 
-        if let None = entity_names.get(cert.issuer_entity.as_str()) {
-            miette::bail!(
-                "certificate \"{}\" issuer entity \"{}\" does not exist",
-                cert.name,
-                cert.issuer_key
-            )
+        match (&cert.issuer_entity, &cert.issuer_certificate) {
+            (None, None) => miette::bail!("certificate \"{}\" must specify either an issuer entity or certificate", cert.name),
+            (Some(_), Some(_)) => miette::bail!("certificate \"{}\" specifies both an issuer entity and certificate.  Only one may be specified.", cert.name),
+            (Some(entity), None) => {
+                if let None = entity_names.get(entity.as_str()) {
+                    miette::bail!(
+                        "certificate \"{}\" issuer entity \"{}\" does not exist",
+                        cert.name,
+                        cert.issuer_key
+                    )
+                }        
+            }
+            (None, Some(cert_name)) => {
+                if let None = cert_names.get(cert_name.as_str()) {
+                    miette::bail!(
+                        "certificate \"{}\" issuer certificate \"{}\" does not exist",
+                        cert.name,
+                        cert.issuer_key
+                    )
+                }
+            }
         }
 
         if let None = kp_names.get(cert.issuer_key.as_str()) {

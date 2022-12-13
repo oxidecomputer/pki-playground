@@ -5,7 +5,7 @@
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use flagset::FlagSet;
 use miette::{IntoDiagnostic, Result};
-use pkcs1::der::{asn1::OctetStringRef, Encode};
+use pkcs1::der::{asn1::OctetStringRef, Decode, Encode};
 use pkcs8::{
     der::{
         asn1::{SetOfVec, Utf8StringRef},
@@ -21,7 +21,7 @@ use x509_cert::{
     attr::AttributeTypeAndValue,
     ext::pkix::{BasicConstraints, KeyUsage},
     name::{Name, RdnSequence, RelativeDistinguishedName},
-    TbsCertificate,
+    Certificate, TbsCertificate,
 };
 use zeroize::Zeroizing;
 
@@ -229,13 +229,19 @@ impl dyn Extension {
     pub fn from_config(
         config: &config::X509Extensions,
         tbs_cert: &TbsCertificate,
+        issuer_cert: Option<&Certificate>,
     ) -> Result<Box<dyn Extension>> {
         match config {
             config::X509Extensions::BasicConstraints(x) => {
                 Ok(Box::new(BasicConstraintsExtension::from_config(x)?))
             }
             config::X509Extensions::KeyUsage(x) => Ok(Box::new(KeyUsageExtension::from_config(x)?)),
-            config::X509Extensions::SubjectKeyIdentifier(x) => Ok(Box::new(SubjectKeyIdentifierExtension::from_config(x, tbs_cert)?)),
+            config::X509Extensions::SubjectKeyIdentifier(x) => Ok(Box::new(
+                SubjectKeyIdentifierExtension::from_config(x, tbs_cert)?,
+            )),
+            config::X509Extensions::AuthorityKeyIdentifier(x) => Ok(Box::new(
+                AuthorityKeyIdentifierExtension::from_config(x, tbs_cert, issuer_cert)?,
+            )),
         }
     }
 }
@@ -371,6 +377,83 @@ impl SubjectKeyIdentifierExtension {
 impl Extension for SubjectKeyIdentifierExtension {
     fn oid(&self) -> ObjectIdentifier {
         x509_cert::ext::pkix::SubjectKeyIdentifier::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+pub struct AuthorityKeyIdentifierExtension {
+    is_critical: bool,
+    der: Vec<u8>,
+}
+
+impl AuthorityKeyIdentifierExtension {
+    pub fn from_config(
+        config: &config::AuthorityKeyIdentifierExtension,
+        _tbs_cert: &TbsCertificate,
+        issuer_cert: Option<&Certificate>,
+    ) -> Result<Self> {
+        let mut authority_key_identifier = None;
+        let mut authority_cert_issuer = None;
+        let mut authority_cert_serial_number = None;
+
+        if let Some(issuer_cert) = issuer_cert {
+            if config.issuer {
+                authority_cert_issuer = Some(vec![
+                    x509_cert::ext::pkix::name::GeneralName::DirectoryName(
+                        issuer_cert.tbs_certificate.subject.clone(),
+                    ),
+                ]);
+                authority_cert_serial_number = Some(issuer_cert.tbs_certificate.serial_number);
+            }
+
+            if config.key_id {
+                if let Some(extensions) = &issuer_cert.tbs_certificate.extensions {
+                    for extension in extensions {
+                        if extension.extn_id == x509_cert::ext::pkix::SubjectKeyIdentifier::OID {
+                            let ski = x509_cert::ext::pkix::SubjectKeyIdentifier::from_der(
+                                extension.extn_value,
+                            )
+                            .into_diagnostic()?;
+                            authority_key_identifier = Some(ski.0)
+                        }
+                    }
+                }
+
+                if authority_key_identifier.is_none() {
+                    return Err(miette::miette!("Authority Key Identifier extension with key identifer requested but issuer certificate does not include a Subject Key Identifier extension"));
+                }
+            }
+        } else {
+            return Err(miette::miette!(
+                "Authority Key Identifier extension requested but no issuer certificate specified"
+            ));
+        }
+
+        let der = x509_cert::ext::pkix::AuthorityKeyIdentifier {
+            key_identifier: authority_key_identifier,
+            authority_cert_issuer: authority_cert_issuer,
+            authority_cert_serial_number: authority_cert_serial_number,
+        }
+        .to_vec()
+        .into_diagnostic()?;
+
+        Ok(AuthorityKeyIdentifierExtension {
+            is_critical: config.critical,
+            der: der,
+        })
+    }
+}
+
+impl Extension for AuthorityKeyIdentifierExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        x509_cert::ext::pkix::AuthorityKeyIdentifier::OID
     }
 
     fn is_critical(&self) -> bool {

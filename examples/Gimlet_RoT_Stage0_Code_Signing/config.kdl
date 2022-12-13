@@ -176,7 +176,7 @@ certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Ancho
 certificate "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
     subject-entity "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
     subject-key "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1"
-    issuer-entity "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
+    issuer-certificate "Gimlet RoT Stage0 Code Signing Engineering Offline CA A Trust Anchor"
     issuer-key "Gimlet RoT Stage0 Code Signing Engineering Offline CA A"
 
     digest-algorithm "sha-256"
@@ -188,6 +188,10 @@ certificate "Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
         basic-constraints critical=true ca=false
         key-usage critical=true {
             digital-signature
+        }
+        authority-key-identifier critical=true {
+            key-id
+            issuer
         }
     }
 }
