@@ -167,7 +167,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline 
         key-usage critical=true {
             key-cert-sign
         }
-        subject-key-identifier critical=true
+        subject-key-identifier critical=false
     }
 
     serial-number 1
@@ -189,7 +189,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
@@ -212,7 +212,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
@@ -232,7 +232,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline 
         key-usage critical=true {
             key-cert-sign
         }
-        subject-key-identifier critical=true
+        subject-key-identifier critical=false
     }
 
     serial-number 1
@@ -254,7 +254,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
@@ -277,7 +277,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
@@ -297,7 +297,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline C
         key-usage critical=true {
             key-cert-sign
         }
-        subject-key-identifier critical=true
+        subject-key-identifier critical=false
     }
 
     serial-number 1
@@ -319,7 +319,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
@@ -342,7 +342,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
@@ -362,7 +362,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline C
         key-usage critical=true {
             key-cert-sign
         }
-        subject-key-identifier critical=true
+        subject-key-identifier critical=false
     }
 
     serial-number 1
@@ -384,7 +384,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
@@ -407,7 +407,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
         key-usage critical=true {
             digital-signature
         }
-        authority-key-identifier critical=true {
+        authority-key-identifier critical=false {
             key-id
             issuer
         }
