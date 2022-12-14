@@ -114,6 +114,9 @@ pub struct BasicConstraintsExtension {
 
     #[knuffel(property)]
     pub ca: bool,
+
+    #[knuffel(property)]
+    pub path_len: Option<u8>,
 }
 
 #[derive(knuffel::Decode, Debug)]

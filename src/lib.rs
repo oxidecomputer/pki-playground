@@ -256,7 +256,7 @@ impl BasicConstraintsExtension {
     pub fn from_config(config: &config::BasicConstraintsExtension) -> Result<Self> {
         let der = BasicConstraints {
             ca: config.ca,
-            path_len_constraint: None,
+            path_len_constraint: config.path_len,
         }
         .to_vec()
         .into_diagnostic()?;
