@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use miette::{Context, IntoDiagnostic, Result};
 use pkcs1::der::asn1::BitStringRef;
 use pkcs1::der::{Decode, Encode};
@@ -30,10 +30,62 @@ struct Options {
     action: Action,
 }
 
+#[derive(Clone, Copy, PartialEq, ValueEnum)]
+enum OutputFileExistsBehavior {
+    Skip,
+    Error,
+    Overwrite,
+}
+
 #[derive(clap::Subcommand)]
 enum Action {
-    GenerateKeyPairs,
-    GenerateCertificates,
+    GenerateKeyPairs(GenerateKeyPairsOpts),
+    GenerateCertificates(GenerateCertificatesOpts),
+}
+
+#[derive(clap::Args)]
+struct GenerateKeyPairsOpts {
+    /// action to take if an output file already exists
+    #[arg(long, default_value = "skip")]
+    output_exists: OutputFileExistsBehavior,
+}
+
+#[derive(clap::Args)]
+struct GenerateCertificatesOpts {
+    /// action to take if an output file already exists
+    #[arg(long, default_value = "overwrite")]
+    output_exists: OutputFileExistsBehavior,
+}
+
+fn write_to_file(
+    filename: &str,
+    contents: &[u8],
+    exists_behavior: OutputFileExistsBehavior,
+) -> Result<()> {
+    let mut open_opts = OpenOptions::new();
+    open_opts.write(true);
+    match exists_behavior {
+        OutputFileExistsBehavior::Skip | OutputFileExistsBehavior::Error => {
+            open_opts.create_new(true)
+        }
+        OutputFileExistsBehavior::Overwrite => open_opts.create(true).truncate(true),
+    };
+
+    let mut file = match open_opts.open(filename) {
+        Err(e)
+            if e.kind() == std::io::ErrorKind::AlreadyExists
+                && exists_behavior == OutputFileExistsBehavior::Skip =>
+        {
+            println!("File \"{}\" already exists, skipping", filename);
+            return Ok(());
+        }
+        x => x
+            .into_diagnostic()
+            .wrap_err(format!("Unable to open file \"{}\" for writing", filename))?,
+    };
+    file.write_all(contents)
+        .into_diagnostic()
+        .wrap_err(format!("Unable to write to file \"{}\"", filename))
 }
 
 fn main() -> Result<()> {
@@ -50,23 +102,19 @@ fn main() -> Result<()> {
     ))?;
 
     match opts.action {
-        Action::GenerateKeyPairs => {
+        Action::GenerateKeyPairs(action_opts) => {
             for kp_config in &doc.key_pairs {
-                let kp_filename = format!("{}.key.pem", kp_config.name);
-                let mut kp_file = OpenOptions::new()
-                    .write(true)
-                    .create_new(true)
-                    .open(&kp_filename)
-                    .into_diagnostic()
-                    .wrap_err(format!("Writing key pair to \"{}\"", &kp_filename))?;
-
                 let kp = <dyn KeyPair>::new(kp_config)?;
-                kp_file
-                    .write_all(kp.to_pkcs8_pem()?.as_bytes())
-                    .into_diagnostic()?;
+                let kp_filename = format!("{}.key.pem", kp_config.name);
+                println!("Writing key pair to \"{}\"", &kp_filename);
+                write_to_file(
+                    &kp_filename,
+                    kp.to_pkcs8_pem()?.as_bytes(),
+                    action_opts.output_exists,
+                )?
             }
         }
-        Action::GenerateCertificates => {
+        Action::GenerateCertificates(action_opts) => {
             let mut key_pairs = HashMap::new();
             for kp_config in &doc.key_pairs {
                 let kp_filename = format!("{}.key.pem", kp_config.name);
@@ -190,16 +238,12 @@ fn main() -> Result<()> {
                 };
 
                 let cert_filename = format!("{}.cert.der", cert_config.name);
-                let mut cert_file = OpenOptions::new()
-                    .write(true)
-                    .create_new(true)
-                    .open(&cert_filename)
-                    .into_diagnostic()
-                    .wrap_err(format!("Writing cert to \"{}\"", &cert_filename))?;
-
-                cert_file
-                    .write_all(&cert.to_vec().into_diagnostic()?)
-                    .into_diagnostic()?;
+                println!("Writing certificate to \"{}\"", &cert_filename);
+                write_to_file(
+                    &cert_filename,
+                    &cert.to_vec().into_diagnostic()?,
+                    action_opts.output_exists,
+                )?
             }
         }
     }
