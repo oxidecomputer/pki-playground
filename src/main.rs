@@ -49,8 +49,6 @@ fn main() -> Result<()> {
         config_path.display()
     ))?;
 
-    println!("{:#?}", doc);
-
     match opts.action {
         Action::GenerateKeyPairs => {
             for kp_config in &doc.key_pairs {
@@ -87,13 +85,6 @@ fn main() -> Result<()> {
                 let entity = pki_playground::Entity::try_from(entity_config)?;
                 entities.insert(String::from(entity.name()), entity);
             }
-
-            // let mut certs_to_generate = Vec::new();
-            // for cert_config in &doc.certificates {
-            //     if let Some(x) = &cert_config.issuer_entity {
-            //         certs_to_generate.push(cert_config);
-            //     }
-            // }
 
             for cert_config in &doc.certificates {
                 let subject_entity = entities.get(&cert_config.subject_entity).unwrap();
@@ -168,10 +159,6 @@ fn main() -> Result<()> {
                     extensions: None,
                 };
 
-                // TODO: Generate extensions from config.  Need an intermediate
-                // object to store DER-encoded form of extension payload as
-                // x509_cert::ext::Extension only takes a reference to the
-                // payload.
                 let mut extensions = Vec::new();
                 for extension_config in &cert_config.extensions {
                     extensions.push(<dyn Extension>::from_config(
