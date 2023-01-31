@@ -23,7 +23,7 @@ use pkcs8::{
 use rsa::{BigUint, PaddingScheme, PublicKeyParts, RsaPrivateKey};
 use sha1::Sha1;
 use sha2::Digest;
-use sha2::Sha256;
+use sha2::{Sha256, Sha384};
 use x509_cert::{
     attr::AttributeTypeAndValue,
     ext::pkix::{BasicConstraints, KeyUsage},
@@ -137,6 +137,10 @@ impl KeyPair for RsaKeyPair {
                 oid: const_oid::db::rfc5912::SHA_256_WITH_RSA_ENCRYPTION,
                 parameters: None,
             },
+            config::DigestAlgorithm::Sha_384 => AlgorithmIdentifier {
+                oid: const_oid::db::rfc5912::SHA_384_WITH_RSA_ENCRYPTION,
+                parameters: None,
+            },
         }
     }
 
@@ -147,6 +151,15 @@ impl KeyPair for RsaKeyPair {
                 hasher.update(bytes);
 
                 let padding = PaddingScheme::new_pkcs1v15_sign::<sha2::Sha256>();
+                self.private_key
+                    .sign(padding, &hasher.finalize())
+                    .into_diagnostic()
+            }
+            config::DigestAlgorithm::Sha_384 => {
+                let mut hasher = Sha384::new();
+                hasher.update(bytes);
+
+                let padding = PaddingScheme::new_pkcs1v15_sign::<sha2::Sha384>();
                 self.private_key
                     .sign(padding, &hasher.finalize())
                     .into_diagnostic()
@@ -204,6 +217,10 @@ impl KeyPair for P384KeyPair {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_256,
                 parameters: None,
             },
+            config::DigestAlgorithm::Sha_384 => AlgorithmIdentifier {
+                oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_384,
+                parameters: None,
+            },
         }
     }
 
@@ -213,6 +230,10 @@ impl KeyPair for P384KeyPair {
         let signature: Signature = match digest_config {
             config::DigestAlgorithm::Sha_256 => {
                 let digest = sha2::Sha256::digest(bytes);
+                signer.sign_prehash(&digest).into_diagnostic()?
+            }
+            config::DigestAlgorithm::Sha_384 => {
+                let digest = sha2::Sha384::digest(bytes);
                 signer.sign_prehash(&digest).into_diagnostic()?
             }
         };
