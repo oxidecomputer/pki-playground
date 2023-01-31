@@ -5,6 +5,13 @@
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use flagset::FlagSet;
 use miette::{IntoDiagnostic, Result};
+use p384::{
+    ecdsa::{
+        signature::{hazmat::PrehashSigner, SignatureEncoding},
+        Signature, SigningKey,
+    },
+    SecretKey,
+};
 use pkcs1::der::{asn1::OctetStringRef, Decode, Encode};
 use pkcs8::{
     der::{
@@ -37,6 +44,10 @@ pub trait KeyPair {
     fn to_spki(&self) -> Result<spki::Document>;
 
     fn signature_algorithm(&self, digest: &config::DigestAlgorithm) -> AlgorithmIdentifier;
+
+    /// Sign the provided bytes using the associated KeyPair. NOTE: The
+    /// Vec<u8> returned must be the BIT STRING expected by the rfc5280
+    /// §4.1.1.3 signatureValue field.
     fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>>;
 }
 
@@ -44,12 +55,14 @@ impl dyn KeyPair {
     pub fn new(config: &config::KeyPair) -> Result<Box<dyn KeyPair>> {
         match &config.key_type[0] {
             config::KeyType::Rsa(x) => Ok(Box::new(RsaKeyPair::new(&config.name, x)?)),
+            config::KeyType::P384 => Ok(Box::new(P384KeyPair::new(&config.name)?)),
         }
     }
 
     pub fn from_pem(config: &config::KeyPair, s: &str) -> Result<Box<dyn KeyPair>> {
         match &config.key_type[0] {
             config::KeyType::Rsa(x) => Ok(Box::new(RsaKeyPair::from_pem(&config.name, x, s)?)),
+            config::KeyType::P384 => Ok(Box::new(P384KeyPair::from_pem(&config.name, s)?)),
         }
     }
 }
@@ -139,6 +152,74 @@ impl KeyPair for RsaKeyPair {
                     .into_diagnostic()
             }
         }
+    }
+}
+
+pub struct P384KeyPair {
+    name: String,
+    private_key: SecretKey,
+}
+
+impl P384KeyPair {
+    pub fn new(name: &str) -> Result<Self> {
+        let rng = rand::thread_rng();
+        let private_key = SecretKey::random(rng);
+
+        Ok(P384KeyPair {
+            name: name.into(),
+            private_key,
+        })
+    }
+
+    pub fn from_pem(name: &str, s: &str) -> Result<Self> {
+        let private_key = SecretKey::from_pkcs8_pem(s).into_diagnostic()?;
+        Ok(P384KeyPair {
+            name: name.into(),
+            private_key,
+        })
+    }
+}
+
+impl KeyPair for P384KeyPair {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn to_pkcs8_pem(&self) -> Result<Zeroizing<String>> {
+        self.private_key
+            .to_pkcs8_pem(pkcs8::LineEnding::CRLF)
+            .into_diagnostic()
+    }
+
+    fn to_spki(&self) -> Result<spki::Document> {
+        self.private_key
+            .public_key()
+            .to_public_key_der()
+            .into_diagnostic()
+    }
+
+    fn signature_algorithm(&self, digest: &config::DigestAlgorithm) -> AlgorithmIdentifier {
+        match digest {
+            config::DigestAlgorithm::Sha_256 => AlgorithmIdentifier {
+                oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_256,
+                parameters: None,
+            },
+        }
+    }
+
+    fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>> {
+        let signer: SigningKey = self.private_key.clone().into();
+
+        let signature: Signature = match digest_config {
+            config::DigestAlgorithm::Sha_256 => {
+                let digest = sha2::Sha256::digest(bytes);
+                signer.sign_prehash(&digest).into_diagnostic()?
+            }
+        };
+
+        // ECDSA signatures in rfc5280 certificates are encoded per rfc5753.
+        // They are the DER encoding of the r and s integers as a SEQUENCE.
+        Ok(signature.to_der().to_vec())
     }
 }
 
