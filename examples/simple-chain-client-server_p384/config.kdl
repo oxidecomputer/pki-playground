@@ -71,7 +71,7 @@ certificate "TEST USE ONLY - Test CA A" {
     subject-key "TEST USE ONLY - Test CA A"
     issuer-entity "TEST USE ONLY - Test CA A"
     issuer-key "TEST USE ONLY - Test CA A"
-    digest-algorithm "sha-256"
+    digest-algorithm "sha-384"
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
@@ -99,7 +99,7 @@ certificate "TEST USE ONLY - Test Int A" {
     subject-key "TEST USE ONLY - Test Int A"
     issuer-key "TEST USE ONLY - Test CA A"
     issuer-certificate "TEST USE ONLY - Test CA A"
-    digest-algorithm "sha-256"
+    digest-algorithm "sha-384"
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
