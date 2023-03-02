@@ -7,7 +7,7 @@ use miette::{Context, IntoDiagnostic, Result};
 use pkcs1::der::asn1::BitStringRef;
 use pkcs1::der::{Decode, Encode};
 use pkcs1::UIntRef;
-use pkcs8::der::asn1::GeneralizedTime;
+use pkcs8::der::asn1::{GeneralizedTime, UtcTime};
 use pkcs8::der::DateTime;
 use pkcs8::SubjectPublicKeyInfo;
 use pki_playground::{Extension, KeyPair};
@@ -174,16 +174,25 @@ fn main() -> Result<()> {
 
                 let issuer_kp = key_pairs.get(&cert_config.issuer_key).unwrap();
 
-                let not_after = GeneralizedTime::from(
-                    DateTime::from_str(&cert_config.not_after).into_diagnostic()?,
-                );
-                let not_before = GeneralizedTime::from(match &cert_config.not_before {
+                let not_after = DateTime::from_str(&cert_config.not_after).into_diagnostic()?;
+                let not_after = if not_after.year() >= 2050 {
+                    GeneralizedTime::from(not_after).into()
+                } else {
+                    UtcTime::try_from(not_after).into_diagnostic()?.into()
+                };
+                let not_before = match &cert_config.not_before {
                     None => DateTime::from_system_time(SystemTime::now()).into_diagnostic()?,
                     Some(x) => DateTime::from_str(x).into_diagnostic()?,
-                });
+                };
+                let not_before = if not_before.year() >= 2050 {
+                    GeneralizedTime::from(not_before).into()
+                } else {
+                    UtcTime::try_from(not_before).into_diagnostic()?.into()
+                };
+
                 let validity = Validity {
-                    not_before: not_before.into(),
-                    not_after: not_after.into(),
+                    not_before,
+                    not_after,
                 };
 
                 let signature_algorithm =
