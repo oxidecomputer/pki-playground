@@ -3,27 +3,21 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use const_oid::{AssociatedOid, ObjectIdentifier};
+use der::{
+    asn1::{SetOfVec, Utf8StringRef},
+    Decode as _, Encode as _,
+};
+use digest::Digest;
 use flagset::FlagSet;
 use miette::{IntoDiagnostic, Result};
 use p384::{
-    ecdsa::{
-        signature::{hazmat::PrehashSigner, SignatureEncoding},
-        Signature, SigningKey,
-    },
+    ecdsa::{Signature, SigningKey},
     SecretKey,
 };
-use pkcs1::der::{asn1::OctetStringRef, Decode, Encode};
-use pkcs8::{
-    der::{
-        asn1::{SetOfVec, Utf8StringRef},
-        AnyRef,
-    },
-    AlgorithmIdentifier, DecodePrivateKey, EncodePrivateKey, EncodePublicKey,
-};
-use rsa::{BigUint, PaddingScheme, PublicKeyParts, RsaPrivateKey};
+use pkcs8::{DecodePrivateKey, EncodePrivateKey, EncodePublicKey};
+use rsa::{BigUint, PublicKeyParts, RsaPrivateKey, SignatureScheme};
 use sha1::Sha1;
-use sha2::Digest;
-use sha2::{Sha256, Sha384};
+use signature::{hazmat::PrehashSigner, SignatureEncoding};
 use x509_cert::{
     attr::AttributeTypeAndValue,
     ext::pkix::{BasicConstraints, KeyUsage},
@@ -43,7 +37,10 @@ pub trait KeyPair {
 
     fn to_spki(&self) -> Result<spki::Document>;
 
-    fn signature_algorithm(&self, digest: &config::DigestAlgorithm) -> AlgorithmIdentifier;
+    fn signature_algorithm(
+        &self,
+        digest: &config::DigestAlgorithm,
+    ) -> spki::AlgorithmIdentifierOwned;
 
     /// Sign the provided bytes using the associated KeyPair. NOTE: The
     /// Vec<u8> returned must be the BIT STRING expected by the rfc5280
@@ -131,13 +128,16 @@ impl KeyPair for RsaKeyPair {
         self.private_key.to_public_key_der().into_diagnostic()
     }
 
-    fn signature_algorithm(&self, digest: &config::DigestAlgorithm) -> AlgorithmIdentifier {
+    fn signature_algorithm(
+        &self,
+        digest: &config::DigestAlgorithm,
+    ) -> spki::AlgorithmIdentifierOwned {
         match digest {
-            config::DigestAlgorithm::Sha_256 => AlgorithmIdentifier {
+            config::DigestAlgorithm::Sha_256 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::SHA_256_WITH_RSA_ENCRYPTION,
                 parameters: None,
             },
-            config::DigestAlgorithm::Sha_384 => AlgorithmIdentifier {
+            config::DigestAlgorithm::Sha_384 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::SHA_384_WITH_RSA_ENCRYPTION,
                 parameters: None,
             },
@@ -147,21 +147,19 @@ impl KeyPair for RsaKeyPair {
     fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>> {
         match digest_config {
             config::DigestAlgorithm::Sha_256 => {
-                let mut hasher = Sha256::new();
-                hasher.update(bytes);
-
-                let padding = PaddingScheme::new_pkcs1v15_sign::<sha2::Sha256>();
-                self.private_key
-                    .sign(padding, &hasher.finalize())
+                let hash = sha2::Sha256::new().chain_update(bytes).finalize();
+                let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha256>();
+                let mut rng = rand::thread_rng();
+                signer
+                    .sign(Some(&mut rng), &*self.private_key, &hash)
                     .into_diagnostic()
             }
             config::DigestAlgorithm::Sha_384 => {
-                let mut hasher = Sha384::new();
-                hasher.update(bytes);
-
-                let padding = PaddingScheme::new_pkcs1v15_sign::<sha2::Sha384>();
-                self.private_key
-                    .sign(padding, &hasher.finalize())
+                let hash = sha2::Sha384::new().chain_update(bytes).finalize();
+                let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha384>();
+                let mut rng = rand::thread_rng();
+                signer
+                    .sign(Some(&mut rng), &*self.private_key, &hash)
                     .into_diagnostic()
             }
         }
@@ -175,8 +173,8 @@ pub struct P384KeyPair {
 
 impl P384KeyPair {
     pub fn new(name: &str) -> Result<Self> {
-        let rng = rand::thread_rng();
-        let private_key = SecretKey::random(rng);
+        let mut rng = rand::thread_rng();
+        let private_key = SecretKey::random(&mut rng);
 
         Ok(P384KeyPair {
             name: name.into(),
@@ -211,13 +209,16 @@ impl KeyPair for P384KeyPair {
             .into_diagnostic()
     }
 
-    fn signature_algorithm(&self, digest: &config::DigestAlgorithm) -> AlgorithmIdentifier {
+    fn signature_algorithm(
+        &self,
+        digest: &config::DigestAlgorithm,
+    ) -> spki::AlgorithmIdentifierOwned {
         match digest {
-            config::DigestAlgorithm::Sha_256 => AlgorithmIdentifier {
+            config::DigestAlgorithm::Sha_256 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_256,
                 parameters: None,
             },
-            config::DigestAlgorithm::Sha_384 => AlgorithmIdentifier {
+            config::DigestAlgorithm::Sha_384 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_384,
                 parameters: None,
             },
@@ -245,28 +246,28 @@ impl KeyPair for P384KeyPair {
 }
 
 #[derive(Debug)]
-pub struct Entity<'a> {
+pub struct Entity {
     name: String,
-    distinguished_name: Name<'a>,
+    distinguished_name: Name,
 }
 
-impl<'a> Entity<'a> {
+impl<'a> Entity {
     pub fn name(&'a self) -> &'a str {
         &self.name
     }
 
-    pub fn distinguished_name(&'a self) -> &Name<'a> {
+    pub fn distinguished_name(&'a self) -> &Name {
         &self.distinguished_name
     }
 }
 
-impl<'a> std::fmt::Display for Entity<'a> {
+impl<'a> std::fmt::Display for Entity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Entity: {} => {}", self.name, self.distinguished_name)
     }
 }
 
-impl<'a> TryFrom<&'a config::Entity> for Entity<'a> {
+impl<'a> TryFrom<&'a config::Entity> for Entity {
     type Error = miette::Error;
 
     fn try_from(value: &'a config::Entity) -> Result<Self, Self::Error> {
@@ -276,23 +277,23 @@ impl<'a> TryFrom<&'a config::Entity> for Entity<'a> {
             let atv = match base_dn_attr {
                 config::EntityNameComponent::CountryName(x) => AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::CN,
-                    value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?),
+                    value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::StateOrProvinceName(x) => AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::ST,
-                    value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?),
+                    value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::LocalityName(x) => AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::L,
-                    value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?),
+                    value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::OrganizationalUnitName(x) => AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::OU,
-                    value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?),
+                    value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::OrganizationName(x) => AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::O,
-                    value: AnyRef::from(Utf8StringRef::new(x).into_diagnostic()?),
+                    value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
             };
 
@@ -301,7 +302,9 @@ impl<'a> TryFrom<&'a config::Entity> for Entity<'a> {
 
         rdns.push([AttributeTypeAndValue {
             oid: const_oid::db::rfc4519::CN,
-            value: AnyRef::from(Utf8StringRef::new(&value.common_name).into_diagnostic()?),
+            value: x509_cert::der::Any::from(
+                Utf8StringRef::new(&value.common_name).into_diagnostic()?,
+            ),
         }]);
 
         let mut brdns = RdnSequence::default();
@@ -360,7 +363,7 @@ impl BasicConstraintsExtension {
             ca: config.ca,
             path_len_constraint: config.path_len,
         }
-        .to_vec()
+        .to_der()
         .into_diagnostic()?;
 
         Ok(BasicConstraintsExtension {
@@ -428,7 +431,7 @@ impl KeyUsageExtension {
             key_usage_flags |= x509_cert::ext::pkix::KeyUsages::DecipherOnly
         }
 
-        let der = KeyUsage(key_usage_flags).to_vec().into_diagnostic()?;
+        let der = KeyUsage(key_usage_flags).to_der().into_diagnostic()?;
 
         Ok(KeyUsageExtension {
             is_critical: config.critical,
@@ -486,7 +489,7 @@ impl ExtendedKeyUsageExtension {
         let ext_key_usage = x509_cert::ext::pkix::ExtendedKeyUsage(der);
 
         Ok(ExtendedKeyUsageExtension {
-            der: ext_key_usage.to_vec().into_diagnostic()?,
+            der: ext_key_usage.to_der().into_diagnostic()?,
             is_critical: config.critical,
         })
     }
@@ -516,18 +519,22 @@ impl SubjectKeyIdentifierExtension {
         config: &config::SubjectKeyIdentifierExtension,
         tbs_cert: &TbsCertificate,
     ) -> Result<Self> {
-        let subject_pub_key = tbs_cert.subject_public_key_info.subject_public_key;
+        let subject_pub_key = tbs_cert
+            .subject_public_key_info
+            .subject_public_key
+            .as_bytes()
+            .unwrap();
 
         let mut hasher = Sha1::new();
         hasher.update(subject_pub_key);
         let skid = hasher.finalize();
 
         let der = x509_cert::ext::pkix::SubjectKeyIdentifier(
-            OctetStringRef::new(&skid).into_diagnostic()?,
+            x509_cert::der::asn1::OctetString::new(&*skid).into_diagnostic()?,
         );
         Ok(SubjectKeyIdentifierExtension {
             is_critical: config.critical,
-            der: der.to_vec().into_diagnostic()?,
+            der: der.to_der().into_diagnostic()?,
         })
     }
 }
@@ -568,7 +575,8 @@ impl AuthorityKeyIdentifierExtension {
                         issuer_cert.tbs_certificate.subject.clone(),
                     ),
                 ]);
-                authority_cert_serial_number = Some(issuer_cert.tbs_certificate.serial_number);
+                authority_cert_serial_number =
+                    Some(issuer_cert.tbs_certificate.serial_number.clone());
             }
 
             if config.key_id {
@@ -576,7 +584,7 @@ impl AuthorityKeyIdentifierExtension {
                     for extension in extensions {
                         if extension.extn_id == x509_cert::ext::pkix::SubjectKeyIdentifier::OID {
                             let ski = x509_cert::ext::pkix::SubjectKeyIdentifier::from_der(
-                                extension.extn_value,
+                                extension.extn_value.as_bytes(),
                             )
                             .into_diagnostic()?;
                             authority_key_identifier = Some(ski.0)
@@ -599,7 +607,7 @@ impl AuthorityKeyIdentifierExtension {
             authority_cert_issuer,
             authority_cert_serial_number,
         }
-        .to_vec()
+        .to_der()
         .into_diagnostic()?;
 
         Ok(AuthorityKeyIdentifierExtension {
