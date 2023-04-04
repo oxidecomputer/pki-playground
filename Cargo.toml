@@ -21,4 +21,4 @@ sha1 = "0.10.5"
 sha2 = { version = "0.10.6", features = ["oid"] }
 spki = "0.6.0"
 x509-cert = "0.1.0"
-zeroize = "1.5.7"
+zeroize = "1.6.0"
