@@ -3,15 +3,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use clap::{Parser, ValueEnum};
+use der::{
+    asn1::{GeneralizedTime, UtcTime},
+    DateTime, Decode, Encode,
+};
 use miette::{Context, IntoDiagnostic, Result};
-use pkcs1::der::asn1::BitStringRef;
-use pkcs1::der::{Decode, Encode};
-use pkcs1::UIntRef;
-use pkcs8::der::asn1::{GeneralizedTime, UtcTime};
-use pkcs8::der::DateTime;
-use pkcs8::SubjectPublicKeyInfo;
 use pki_playground::{Extension, KeyPair};
 use rsa::BigUint;
+use spki::SubjectPublicKeyInfo;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
@@ -205,8 +204,9 @@ fn main() -> Result<()> {
 
                 let mut tbs_cert = TbsCertificate {
                     version: x509_cert::Version::V3,
-                    serial_number: UIntRef::new(&serial_number).into_diagnostic()?,
-                    signature: signature_algorithm,
+                    serial_number: x509_cert::serial_number::SerialNumber::new(&serial_number)
+                        .into_diagnostic()?,
+                    signature: signature_algorithm.clone(),
                     issuer: issuer_dn,
                     validity,
                     subject: subject_entity.distinguished_name().clone(),
@@ -230,27 +230,29 @@ fn main() -> Result<()> {
                     cert_extensions.push(x509_cert::ext::Extension {
                         extn_id: extension.oid(),
                         critical: extension.is_critical(),
-                        extn_value: extension.as_der(),
+                        extn_value: x509_cert::der::asn1::OctetString::new(extension.as_der())
+                            .into_diagnostic()?,
                     })
                 }
 
                 tbs_cert.extensions = Some(cert_extensions);
-                let tbs_cert_der = tbs_cert.to_vec().into_diagnostic()?;
+                let tbs_cert_der = tbs_cert.to_der().into_diagnostic()?;
 
                 let cert_signature = issuer_kp
                     .signature(&cert_config.digest_algorithm, &tbs_cert_der)
                     .wrap_err("signing cert")?;
                 let cert = Certificate {
                     tbs_certificate: tbs_cert,
-                    signature_algorithm,
-                    signature: BitStringRef::from_bytes(&cert_signature).into_diagnostic()?,
+                    signature_algorithm: signature_algorithm.clone(),
+                    signature: x509_cert::der::asn1::BitString::from_bytes(&cert_signature)
+                        .into_diagnostic()?,
                 };
 
                 let cert_filename = format!("{}.cert.der", cert_config.name);
                 println!("Writing certificate to \"{}\"", &cert_filename);
                 write_to_file(
                     &cert_filename,
-                    &cert.to_vec().into_diagnostic()?,
+                    &cert.to_der().into_diagnostic()?,
                     action_opts.output_exists,
                 )?
             }
