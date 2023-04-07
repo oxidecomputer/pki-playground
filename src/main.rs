@@ -9,7 +9,6 @@ use der::{
 };
 use miette::{Context, IntoDiagnostic, Result};
 use pki_playground::{Extension, KeyPair};
-use rsa::BigUint;
 use spki::SubjectPublicKeyInfo;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
@@ -200,7 +199,17 @@ fn main() -> Result<()> {
                 let spki_der = subject_kp.to_spki()?;
                 let spki = SubjectPublicKeyInfo::from_der(spki_der.as_bytes()).into_diagnostic()?;
 
-                let serial_number = BigUint::from(cert_config.serial_number).to_bytes_be();
+                let serial_number = hex::decode(&cert_config.serial_number)
+                    .into_diagnostic()
+                    .wrap_err(format!(
+                        "Serial number of certificate \"{}\"",
+                        cert_config.name
+                    ))?;
+                if serial_number.len() > 20 {
+                    return Err(miette::miette!(
+                        "Certificate serial number must be at most 20 octets"
+                    ));
+                }
 
                 let mut tbs_cert = TbsCertificate {
                     version: x509_cert::Version::V3,

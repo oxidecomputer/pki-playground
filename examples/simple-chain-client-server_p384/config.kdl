@@ -90,7 +90,7 @@ certificate "TEST USE ONLY - Test CA A" {
             id-kp-server-auth
         }
     }
-    serial-number 1
+    serial-number "01"
 }
 
 
@@ -121,7 +121,7 @@ certificate "TEST USE ONLY - Test Int A" {
             id-kp-server-auth
         }
     }
-    serial-number 1
+    serial-number "01"
 }
 
 certificate "TEST USE ONLY - Test Int B" {
@@ -151,7 +151,7 @@ certificate "TEST USE ONLY - Test Int B" {
             id-kp-server-auth
         }
     }
-    serial-number 1
+    serial-number "01"
 }
 
 certificate "TEST USE ONLY - Test Server A" {
@@ -172,7 +172,7 @@ certificate "TEST USE ONLY - Test Server A" {
         }
     }
 
-    serial-number 1
+    serial-number "01"
 }
 
 
@@ -194,5 +194,5 @@ certificate "TEST USE ONLY - Test Client A" {
         }
     }
 
-    serial-number 1
+    serial-number "01"
 }

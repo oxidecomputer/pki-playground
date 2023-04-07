@@ -87,7 +87,7 @@ pub struct Certificate {
     pub not_after: String,
 
     #[knuffel(child, unwrap(argument))]
-    pub serial_number: u64,
+    pub serial_number: String,
 
     #[knuffel(child, unwrap(children))]
     pub extensions: Vec<X509Extensions>,

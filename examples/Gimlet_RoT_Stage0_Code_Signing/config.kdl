@@ -170,7 +170,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline 
         subject-key-identifier critical=false
     }
 
-    serial-number 1
+    serial-number "01"
 }
 
 certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer A1" {
@@ -182,7 +182,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
@@ -205,7 +205,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
@@ -235,7 +235,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Offline 
         subject-key-identifier critical=false
     }
 
-    serial-number 1
+    serial-number "01"
 }
 
 certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online Signer B1" {
@@ -247,7 +247,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
@@ -270,7 +270,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Engineering Online S
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
@@ -300,7 +300,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline C
         subject-key-identifier critical=false
     }
 
-    serial-number 1
+    serial-number "01"
 }
 
 certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer A1" {
@@ -312,7 +312,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
@@ -335,7 +335,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
@@ -365,7 +365,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Offline C
         subject-key-identifier critical=false
     }
 
-    serial-number 1
+    serial-number "01"
 }
 
 certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Signer B1" {
@@ -377,7 +377,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
@@ -400,7 +400,7 @@ certificate "TEST USE ONLY - Gimlet RoT Stage0 Code Signing Production Online Si
     digest-algorithm "sha-256"
 
     not-after "9999-12-31T23:59:59Z"
-    serial-number 0x3cc3000000000000
+    serial-number "3cc3000000000000"
 
     extensions {
         basic-constraints critical=true ca=false
