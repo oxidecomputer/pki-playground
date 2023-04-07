@@ -568,38 +568,39 @@ impl AuthorityKeyIdentifierExtension {
         let mut authority_cert_issuer = None;
         let mut authority_cert_serial_number = None;
 
-        if let Some(issuer_cert) = issuer_cert {
-            if config.issuer {
-                authority_cert_issuer = Some(vec![
-                    x509_cert::ext::pkix::name::GeneralName::DirectoryName(
-                        issuer_cert.tbs_certificate.subject.clone(),
-                    ),
-                ]);
-                authority_cert_serial_number =
-                    Some(issuer_cert.tbs_certificate.serial_number.clone());
-            }
-
-            if config.key_id {
-                if let Some(extensions) = &issuer_cert.tbs_certificate.extensions {
-                    for extension in extensions {
-                        if extension.extn_id == x509_cert::ext::pkix::SubjectKeyIdentifier::OID {
-                            let ski = x509_cert::ext::pkix::SubjectKeyIdentifier::from_der(
-                                extension.extn_value.as_bytes(),
-                            )
-                            .into_diagnostic()?;
-                            authority_key_identifier = Some(ski.0)
-                        }
-                    }
-                }
-
-                if authority_key_identifier.is_none() {
-                    return Err(miette::miette!("Authority Key Identifier extension with key identifer requested but issuer certificate does not include a Subject Key Identifier extension"));
-                }
-            }
+        let issuer_tbs = if let Some(issuer_cert) = issuer_cert {
+            &issuer_cert.tbs_certificate
+        } else if _tbs_cert.subject == _tbs_cert.issuer {
+            &_tbs_cert
         } else {
             return Err(miette::miette!(
                 "Authority Key Identifier extension requested but no issuer certificate specified"
             ));
+        };
+
+        if config.issuer {
+            authority_cert_issuer = Some(vec![
+                x509_cert::ext::pkix::name::GeneralName::DirectoryName(issuer_tbs.subject.clone()),
+            ]);
+            authority_cert_serial_number = Some(issuer_tbs.serial_number.clone());
+        }
+
+        if config.key_id {
+            if let Some(extensions) = &issuer_tbs.extensions {
+                for extension in extensions {
+                    if extension.extn_id == x509_cert::ext::pkix::SubjectKeyIdentifier::OID {
+                        let ski = x509_cert::ext::pkix::SubjectKeyIdentifier::from_der(
+                            extension.extn_value.as_bytes(),
+                        )
+                        .into_diagnostic()?;
+                        authority_key_identifier = Some(ski.0)
+                    }
+                }
+            }
+
+            if authority_key_identifier.is_none() {
+                return Err(miette::miette!("Authority Key Identifier extension with key identifer requested but issuer certificate does not include a Subject Key Identifier extension"));
+            }
         }
 
         let der = x509_cert::ext::pkix::AuthorityKeyIdentifier {
