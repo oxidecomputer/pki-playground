@@ -1,0 +1,419 @@
+key-pair "Gimlet RoT Code Signing Testing Development Root A" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Development Root B" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Development Signer A1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Development Signer A2" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Development Signer B1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Development Signer B2" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Release Root A" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Release Root B" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Release Signer A1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Release Signer A2" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Release Signer B1" {
+    rsa num-bits=4096
+}
+
+key-pair "Gimlet RoT Code Signing Testing Release Signer B2" {
+    rsa num-bits=4096
+}
+
+entity "Gimlet RoT Code Signing Testing Development Root A" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Development Root A"
+}
+
+entity "Gimlet RoT Code Signing Testing Development Root B" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Development Root B"
+}
+
+entity "Gimlet RoT Code Signing Testing Development Signer A1" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Development Signer A1"
+}
+
+entity "Gimlet RoT Code Signing Testing Development Signer A2" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Development Signer A2"
+}
+
+entity "Gimlet RoT Code Signing Testing Development Signer B1" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Development Signer A1"
+}
+
+entity "Gimlet RoT Code Signing Testing Development Signer B2" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Development Signer A2"
+}
+
+entity "Gimlet RoT Code Signing Testing Release Root A" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Release Root A"
+}
+
+entity "Gimlet RoT Code Signing Testing Release Root B" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Release Root B"
+}
+
+entity "Gimlet RoT Code Signing Testing Release Signer A1" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Release Signer A1"
+}
+
+entity "Gimlet RoT Code Signing Testing Release Signer A2" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Release Signer A2"
+}
+
+entity "Gimlet RoT Code Signing Testing Release Signer B1" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Release Signer A1"
+}
+
+entity "Gimlet RoT Code Signing Testing Release Signer B2" {
+    country-name "US"
+    organization-name "Oxide Computer Company"
+    common-name "Gimlet RoT Code Signing Testing Release Signer A2"
+}
+
+certificate "Gimlet RoT Code Signing Testing Development Root A" {
+    subject-entity "Gimlet RoT Code Signing Testing Development Root A"
+    subject-key "Gimlet RoT Code Signing Testing Development Root A"
+    issuer-entity "Gimlet RoT Code Signing Testing Development Root A"
+    issuer-key "Gimlet RoT Code Signing Testing Development Root A"
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000000"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=true
+        key-usage critical=true {
+            key-cert-sign
+            crl-sign
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Development Signer A1" {
+    subject-entity "Gimlet RoT Code Signing Testing Development Signer A1"
+    subject-key "Gimlet RoT Code Signing Testing Development Signer A1"
+    issuer-certificate "Gimlet RoT Code Signing Testing Development Root A"
+    issuer-key "Gimlet RoT Code Signing Testing Development Root A"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000001"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Development Signer A2" {
+    subject-entity "Gimlet RoT Code Signing Testing Development Signer A2"
+    subject-key "Gimlet RoT Code Signing Testing Development Signer A2"
+    issuer-certificate "Gimlet RoT Code Signing Testing Development Root A"
+    issuer-key "Gimlet RoT Code Signing Testing Development Root A"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000002"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Development Root B" {
+    subject-entity "Gimlet RoT Code Signing Testing Development Root B"
+    subject-key "Gimlet RoT Code Signing Testing Development Root B"
+    issuer-entity "Gimlet RoT Code Signing Testing Development Root B"
+    issuer-key "Gimlet RoT Code Signing Testing Development Root B"
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000000"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=true
+        key-usage critical=true {
+            key-cert-sign
+            crl-sign
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Development Signer B1" {
+    subject-entity "Gimlet RoT Code Signing Testing Development Signer B1"
+    subject-key "Gimlet RoT Code Signing Testing Development Signer B1"
+    issuer-certificate "Gimlet RoT Code Signing Testing Development Root B"
+    issuer-key "Gimlet RoT Code Signing Testing Development Root B"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000001"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Development Signer B2" {
+    subject-entity "Gimlet RoT Code Signing Testing Development Signer B2"
+    subject-key "Gimlet RoT Code Signing Testing Development Signer B2"
+    issuer-certificate "Gimlet RoT Code Signing Testing Development Root B"
+    issuer-key "Gimlet RoT Code Signing Testing Development Root B"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000002"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Release Root A" {
+    subject-entity "Gimlet RoT Code Signing Testing Release Root A"
+    subject-key "Gimlet RoT Code Signing Testing Release Root A"
+    issuer-entity "Gimlet RoT Code Signing Testing Release Root A"
+    issuer-key "Gimlet RoT Code Signing Testing Release Root A"
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000000"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=true
+        key-usage critical=true {
+            key-cert-sign
+            crl-sign
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Release Signer A1" {
+    subject-entity "Gimlet RoT Code Signing Testing Release Signer A1"
+    subject-key "Gimlet RoT Code Signing Testing Release Signer A1"
+    issuer-certificate "Gimlet RoT Code Signing Testing Release Root A"
+    issuer-key "Gimlet RoT Code Signing Testing Release Root A"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000001"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Release Signer A2" {
+    subject-entity "Gimlet RoT Code Signing Testing Release Signer A2"
+    subject-key "Gimlet RoT Code Signing Testing Release Signer A2"
+    issuer-certificate "Gimlet RoT Code Signing Testing Release Root A"
+    issuer-key "Gimlet RoT Code Signing Testing Release Root A"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000002"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Release Root B" {
+    subject-entity "Gimlet RoT Code Signing Testing Release Root B"
+    subject-key "Gimlet RoT Code Signing Testing Release Root B"
+    issuer-entity "Gimlet RoT Code Signing Testing Release Root B"
+    issuer-key "Gimlet RoT Code Signing Testing Release Root B"
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000000"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=true
+        key-usage critical=true {
+            key-cert-sign
+            crl-sign
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Release Signer B1" {
+    subject-entity "Gimlet RoT Code Signing Testing Release Signer B1"
+    subject-key "Gimlet RoT Code Signing Testing Release Signer B1"
+    issuer-certificate "Gimlet RoT Code Signing Testing Release Root B"
+    issuer-key "Gimlet RoT Code Signing Testing Release Root B"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000001"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
+
+certificate "Gimlet RoT Code Signing Testing Release Signer B2" {
+    subject-entity "Gimlet RoT Code Signing Testing Release Signer B2"
+    subject-key "Gimlet RoT Code Signing Testing Release Signer B2"
+    issuer-certificate "Gimlet RoT Code Signing Testing Release Root B"
+    issuer-key "Gimlet RoT Code Signing Testing Release Root B"
+
+    digest-algorithm "sha-256"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "3cc3000000000000000000000000000000000002"
+
+    extensions {
+        subject-key-identifier critical=false
+        authority-key-identifier critical=false {
+            key-id
+        }
+        basic-constraints critical=true ca=false
+        key-usage critical=true {
+            digital-signature
+        }
+        extended-key-usage critical=false {
+            id-kp-code-signing
+        }
+    }
+}
