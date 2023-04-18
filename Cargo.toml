@@ -14,7 +14,7 @@ digest = "0.10.6"
 flagset = "0.4.3"
 hex = "0.4.3"
 knuffel = "2.0.0"
-miette = { version = "4.7.1", features = ["fancy"] }
+miette = { version = "5.8.0", features = ["fancy"] }
 p384 = "0.13.0"
 pkcs8 = { version = "0.10.2", features = ["pem"] }
 rand = "0.8.5"
