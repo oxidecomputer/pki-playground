@@ -30,6 +30,7 @@ pub struct KeyPair {
 pub enum KeyType {
     Rsa(RsaKeyConfig),
     P384,
+    Ed25519,
 }
 
 #[derive(knuffel::Decode, Debug)]

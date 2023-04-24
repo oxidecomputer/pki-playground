@@ -194,7 +194,7 @@ fn main() -> Result<()> {
                 };
 
                 let signature_algorithm =
-                    issuer_kp.signature_algorithm(&cert_config.digest_algorithm);
+                    issuer_kp.signature_algorithm(&cert_config.digest_algorithm)?;
 
                 let spki_der = subject_kp.to_spki()?;
                 let spki = SubjectPublicKeyInfo::from_der(spki_der.as_bytes()).into_diagnostic()?;
