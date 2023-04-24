@@ -29,6 +29,9 @@ use zeroize::Zeroizing;
 use const_oid::db::rfc5912;
 
 pub mod config;
+pub mod ed25519;
+
+pub use ed25519::Ed25519KeyPair;
 
 pub trait KeyPair {
     fn name(&self) -> &str;
@@ -40,7 +43,7 @@ pub trait KeyPair {
     fn signature_algorithm(
         &self,
         digest: &config::DigestAlgorithm,
-    ) -> spki::AlgorithmIdentifierOwned;
+    ) -> Result<spki::AlgorithmIdentifierOwned>;
 
     /// Sign the provided bytes using the associated KeyPair. NOTE: The
     /// Vec<u8> returned must be the BIT STRING expected by the rfc5280
@@ -53,6 +56,7 @@ impl dyn KeyPair {
         match &config.key_type[0] {
             config::KeyType::Rsa(x) => Ok(Box::new(RsaKeyPair::new(&config.name, x)?)),
             config::KeyType::P384 => Ok(Box::new(P384KeyPair::new(&config.name)?)),
+            config::KeyType::Ed25519 => Ok(Box::new(Ed25519KeyPair::new(&config.name))),
         }
     }
 
@@ -60,6 +64,7 @@ impl dyn KeyPair {
         match &config.key_type[0] {
             config::KeyType::Rsa(x) => Ok(Box::new(RsaKeyPair::from_pem(&config.name, x, s)?)),
             config::KeyType::P384 => Ok(Box::new(P384KeyPair::from_pem(&config.name, s)?)),
+            config::KeyType::Ed25519 => Ok(Box::new(Ed25519KeyPair::from_pem(&config.name, s)?)),
         }
     }
 }
@@ -131,8 +136,8 @@ impl KeyPair for RsaKeyPair {
     fn signature_algorithm(
         &self,
         digest: &config::DigestAlgorithm,
-    ) -> spki::AlgorithmIdentifierOwned {
-        match digest {
+    ) -> Result<spki::AlgorithmIdentifierOwned> {
+        let alg_id = match digest {
             config::DigestAlgorithm::Sha_256 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::SHA_256_WITH_RSA_ENCRYPTION,
                 parameters: None,
@@ -145,7 +150,8 @@ impl KeyPair for RsaKeyPair {
                 oid: const_oid::db::rfc5912::SHA_512_WITH_RSA_ENCRYPTION,
                 parameters: None,
             },
-        }
+        };
+        Ok(alg_id)
     }
 
     fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>> {
@@ -224,8 +230,8 @@ impl KeyPair for P384KeyPair {
     fn signature_algorithm(
         &self,
         digest: &config::DigestAlgorithm,
-    ) -> spki::AlgorithmIdentifierOwned {
-        match digest {
+    ) -> Result<spki::AlgorithmIdentifierOwned> {
+        let alg_id = match digest {
             config::DigestAlgorithm::Sha_256 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_256,
                 parameters: None,
@@ -238,7 +244,8 @@ impl KeyPair for P384KeyPair {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_512,
                 parameters: None,
             },
-        }
+        };
+        Ok(alg_id)
     }
 
     fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>> {
