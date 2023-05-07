@@ -571,7 +571,7 @@ impl AuthorityKeyIdentifierExtension {
         let issuer_tbs = if let Some(issuer_cert) = issuer_cert {
             &issuer_cert.tbs_certificate
         } else if _tbs_cert.subject == _tbs_cert.issuer {
-            &_tbs_cert
+            _tbs_cert
         } else {
             return Err(miette::miette!(
                 "Authority Key Identifier extension requested but no issuer certificate specified"
