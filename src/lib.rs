@@ -261,8 +261,8 @@ impl<'a> Entity {
     }
 }
 
-impl<'a> std::fmt::Display for Entity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl std::fmt::Display for Entity {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         writeln!(f, "Entity: {} => {}", self.name, self.distinguished_name)
     }
 }
