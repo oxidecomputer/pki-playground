@@ -461,32 +461,36 @@ impl Extension for ExtendedKeyUsageExtension {
 
 impl ExtendedKeyUsageExtension {
     pub(crate) fn from_config(config: &config::ExtendedKeyUsageExtension) -> Result<Self> {
-        let mut der = Vec::new();
+        let mut extended_key_usage_oids = Vec::new();
         if config.id_kp_client_auth {
-            der.push(rfc5912::ID_KP_CLIENT_AUTH);
+            extended_key_usage_oids.push(rfc5912::ID_KP_CLIENT_AUTH);
         }
 
         if config.id_kp_server_auth {
-            der.push(rfc5912::ID_KP_SERVER_AUTH);
+            extended_key_usage_oids.push(rfc5912::ID_KP_SERVER_AUTH);
         }
 
         if config.id_kp_code_signing {
-            der.push(rfc5912::ID_KP_CODE_SIGNING);
+            extended_key_usage_oids.push(rfc5912::ID_KP_CODE_SIGNING);
         }
 
         if config.id_kp_email_protection {
-            der.push(rfc5912::ID_KP_EMAIL_PROTECTION);
+            extended_key_usage_oids.push(rfc5912::ID_KP_EMAIL_PROTECTION);
         }
 
         if config.id_kp_time_stamping {
-            der.push(rfc5912::ID_KP_TIME_STAMPING);
+            extended_key_usage_oids.push(rfc5912::ID_KP_TIME_STAMPING);
         }
 
         if config.id_kp_ocspsigning {
-            der.push(rfc5912::ID_KP_OCSP_SIGNING);
+            extended_key_usage_oids.push(rfc5912::ID_KP_OCSP_SIGNING);
         }
 
-        let ext_key_usage = x509_cert::ext::pkix::ExtendedKeyUsage(der);
+        for oid in config.oids.iter() {
+            extended_key_usage_oids.push(ObjectIdentifier::new(oid).into_diagnostic()?);
+        }
+
+        let ext_key_usage = x509_cert::ext::pkix::ExtendedKeyUsage(extended_key_usage_oids);
 
         Ok(ExtendedKeyUsageExtension {
             der: ext_key_usage.to_der().into_diagnostic()?,
