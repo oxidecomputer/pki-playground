@@ -348,6 +348,9 @@ impl dyn Extension {
             config::X509Extensions::ExtendedKeyUsage(x) => {
                 Ok(Box::new(ExtendedKeyUsageExtension::from_config(x)?))
             }
+            config::X509Extensions::CertificatePolicies(x) => {
+                Ok(Box::new(CertificatePoliciesExtension::from_config(x)?))
+            }
         }
     }
 }
@@ -633,5 +636,46 @@ impl Extension for AuthorityKeyIdentifierExtension {
 
     fn as_der(&self) -> &[u8] {
         &self.der
+    }
+}
+
+pub struct CertificatePoliciesExtension {
+    is_critical: bool,
+    der: Vec<u8>,
+}
+
+impl Extension for CertificatePoliciesExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        x509_cert::ext::pkix::CertificatePolicies::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+impl CertificatePoliciesExtension {
+    pub fn from_config(config: &config::CertificatePoliciesExtension) -> Result<Self> {
+        let mut policies = Vec::new();
+
+        for oid in config.oids.iter() {
+            policies.push(x509_cert::ext::pkix::certpolicy::PolicyInformation {
+                policy_identifier: ObjectIdentifier::new(oid).into_diagnostic()?,
+                policy_qualifiers: None,
+            });
+        }
+
+        let der = x509_cert::ext::pkix::CertificatePolicies(policies)
+            .to_der()
+            .into_diagnostic()?;
+
+        Ok(CertificatePoliciesExtension {
+            is_critical: config.critical,
+            der,
+        })
     }
 }
