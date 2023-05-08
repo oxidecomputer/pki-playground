@@ -194,7 +194,7 @@ fn main() -> Result<()> {
                 };
 
                 let signature_algorithm =
-                    issuer_kp.signature_algorithm(&cert_config.digest_algorithm)?;
+                    issuer_kp.signature_algorithm(cert_config.digest_algorithm.as_ref())?;
 
                 let spki_der = subject_kp.to_spki()?;
                 let spki = SubjectPublicKeyInfo::from_der(spki_der.as_bytes()).into_diagnostic()?;
@@ -251,7 +251,7 @@ fn main() -> Result<()> {
                 let tbs_cert_der = tbs_cert.to_der().into_diagnostic()?;
 
                 let cert_signature = issuer_kp
-                    .signature(&cert_config.digest_algorithm, &tbs_cert_der)
+                    .signature(cert_config.digest_algorithm.as_ref(), &tbs_cert_der)
                     .wrap_err("signing cert")?;
                 let cert = Certificate {
                     tbs_certificate: tbs_cert,

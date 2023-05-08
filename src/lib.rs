@@ -31,7 +31,7 @@ use const_oid::db::rfc5912;
 pub mod config;
 pub mod ed25519;
 
-pub use ed25519::Ed25519KeyPair;
+use ed25519::Ed25519KeyPair;
 
 pub trait KeyPair {
     fn name(&self) -> &str;
@@ -42,13 +42,17 @@ pub trait KeyPair {
 
     fn signature_algorithm(
         &self,
-        digest: &config::DigestAlgorithm,
+        digest: Option<&config::DigestAlgorithm>,
     ) -> Result<spki::AlgorithmIdentifierOwned>;
 
     /// Sign the provided bytes using the associated KeyPair. NOTE: The
     /// Vec<u8> returned must be the BIT STRING expected by the rfc5280
     /// §4.1.1.3 signatureValue field.
-    fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>>;
+    fn signature(
+        &self,
+        digest_config: Option<&config::DigestAlgorithm>,
+        bytes: &[u8],
+    ) -> Result<Vec<u8>>;
 }
 
 impl dyn KeyPair {
@@ -135,8 +139,12 @@ impl KeyPair for RsaKeyPair {
 
     fn signature_algorithm(
         &self,
-        digest: &config::DigestAlgorithm,
+        digest: Option<&config::DigestAlgorithm>,
     ) -> Result<spki::AlgorithmIdentifierOwned> {
+        let digest = digest.ok_or(miette::miette!(
+            "Rsa signatures require a hash algorithm and None provided."
+        ))?;
+
         let alg_id = match digest {
             config::DigestAlgorithm::Sha_256 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::SHA_256_WITH_RSA_ENCRYPTION,
@@ -151,10 +159,19 @@ impl KeyPair for RsaKeyPair {
                 parameters: None,
             },
         };
+
         Ok(alg_id)
     }
 
-    fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>> {
+    fn signature(
+        &self,
+        digest_config: Option<&config::DigestAlgorithm>,
+        bytes: &[u8],
+    ) -> Result<Vec<u8>> {
+        let digest_config = digest_config.ok_or(miette::miette!(
+            "Rsa signatures require a hash algorithm and None provided."
+        ))?;
+
         match digest_config {
             config::DigestAlgorithm::Sha_256 => {
                 let hash = sha2::Sha256::new().chain_update(bytes).finalize();
@@ -229,8 +246,12 @@ impl KeyPair for P384KeyPair {
 
     fn signature_algorithm(
         &self,
-        digest: &config::DigestAlgorithm,
+        digest: Option<&config::DigestAlgorithm>,
     ) -> Result<spki::AlgorithmIdentifierOwned> {
+        let digest = digest.ok_or(miette::miette!(
+            "P384 signatures require a hash algorithm but `None` provided."
+        ))?;
+
         let alg_id = match digest {
             config::DigestAlgorithm::Sha_256 => spki::AlgorithmIdentifierOwned {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_256,
@@ -245,10 +266,19 @@ impl KeyPair for P384KeyPair {
                 parameters: None,
             },
         };
+
         Ok(alg_id)
     }
 
-    fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>> {
+    fn signature(
+        &self,
+        digest_config: Option<&config::DigestAlgorithm>,
+        bytes: &[u8],
+    ) -> Result<Vec<u8>> {
+        let digest_config = digest_config.ok_or(miette::miette!(
+            "P384 signatures require a hash algorithm but `None` provided."
+        ))?;
+
         let signer: SigningKey = self.private_key.clone().into();
 
         let signature: Signature = match digest_config {

@@ -71,7 +71,6 @@ certificate "TEST USE ONLY - Test CA A" {
     subject-key "TEST USE ONLY - Test CA A"
     issuer-entity "TEST USE ONLY - Test CA A"
     issuer-key "TEST USE ONLY - Test CA A"
-    digest-algorithm "sha-512"
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
@@ -99,7 +98,6 @@ certificate "TEST USE ONLY - Test Int A" {
     subject-key "TEST USE ONLY - Test Int A"
     issuer-key "TEST USE ONLY - Test CA A"
     issuer-certificate "TEST USE ONLY - Test CA A"
-    digest-algorithm "sha-512"
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
@@ -129,7 +127,6 @@ certificate "TEST USE ONLY - Test Int B" {
     subject-key "TEST USE ONLY - Test Int B"
     issuer-key "TEST USE ONLY - Test CA A"
     issuer-certificate "TEST USE ONLY - Test CA A"
-    digest-algorithm "sha-512"
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
@@ -159,7 +156,6 @@ certificate "TEST USE ONLY - Test Server A" {
     subject-key "TEST USE ONLY - Test Server A"
     issuer-certificate "TEST USE ONLY - Test Int B"
     issuer-key "TEST USE ONLY - Test Int B"
-    digest-algorithm "sha-512"
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
@@ -181,7 +177,6 @@ certificate "TEST USE ONLY - Test Client A" {
     subject-key "TEST USE ONLY - Test Client A"
     issuer-certificate "TEST USE ONLY - Test Int A"
     issuer-key "TEST USE ONLY - Test Int A"
-    digest-algorithm "sha-512"
 
     not-after "9999-12-31T23:59:59Z"
     extensions {
