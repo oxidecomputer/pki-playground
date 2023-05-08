@@ -141,6 +141,9 @@ certificate "Gimlet RoT Code Signing Testing Development Root A" {
         extended-key-usage critical=false {
             oid "1.3.6.1.4.1.57551.2.1"
         }
+        certificate-policies critical=false {
+            oid "1.3.6.1.4.1.57551.1.2"
+        }
     }
 }
 
@@ -218,6 +221,9 @@ certificate "Gimlet RoT Code Signing Testing Development Root B" {
         }
         extended-key-usage critical=false {
             oid "1.3.6.1.4.1.57551.2.1"
+        }
+        certificate-policies critical=false {
+            oid "1.3.6.1.4.1.57551.1.2"
         }
     }
 }
@@ -297,6 +303,9 @@ certificate "Gimlet RoT Code Signing Testing Release Root A" {
         extended-key-usage critical=false {
             oid "1.3.6.1.4.1.57551.2.1"
         }
+        certificate-policies critical=false {
+            oid "1.3.6.1.4.1.57551.1.1"
+        }
     }
 }
 
@@ -374,6 +383,9 @@ certificate "Gimlet RoT Code Signing Testing Release Root B" {
         }
         extended-key-usage critical=false {
             oid "1.3.6.1.4.1.57551.2.1"
+        }
+        certificate-policies critical=false {
+            oid "1.3.6.1.4.1.57551.1.1"
         }
     }
 }

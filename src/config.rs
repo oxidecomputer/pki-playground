@@ -107,6 +107,7 @@ pub enum X509Extensions {
     SubjectKeyIdentifier(SubjectKeyIdentifierExtension),
     AuthorityKeyIdentifier(AuthorityKeyIdentifierExtension),
     ExtendedKeyUsage(ExtendedKeyUsageExtension),
+    CertificatePolicies(CertificatePoliciesExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -197,6 +198,15 @@ pub struct AuthorityKeyIdentifierExtension {
 
     #[knuffel(child)]
     pub issuer: bool,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct CertificatePoliciesExtension {
+    #[knuffel(property)]
+    pub critical: bool,
+
+    #[knuffel(children(name = "oid"), unwrap(argument))]
+    pub oids: Vec<String>,
 }
 
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
