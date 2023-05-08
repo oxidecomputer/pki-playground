@@ -80,7 +80,7 @@ pub struct Certificate {
     pub issuer_key: String,
 
     #[knuffel(child, unwrap(argument))]
-    pub digest_algorithm: DigestAlgorithm,
+    pub digest_algorithm: Option<DigestAlgorithm>,
 
     #[knuffel(child, unwrap(argument))]
     pub not_before: Option<String>,

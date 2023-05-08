@@ -62,7 +62,7 @@ impl KeyPair for Ed25519KeyPair {
 
     fn signature_algorithm(
         &self,
-        digest: &config::DigestAlgorithm,
+        digest: Option<&config::DigestAlgorithm>,
     ) -> Result<spki::AlgorithmIdentifierOwned> {
         validate_digest(digest)?;
 
@@ -72,7 +72,11 @@ impl KeyPair for Ed25519KeyPair {
         })
     }
 
-    fn signature(&self, digest_config: &config::DigestAlgorithm, bytes: &[u8]) -> Result<Vec<u8>> {
+    fn signature(
+        &self,
+        digest_config: Option<&config::DigestAlgorithm>,
+        bytes: &[u8],
+    ) -> Result<Vec<u8>> {
         validate_digest(digest_config)?;
 
         let signature: Signature = self.signing_key.try_sign(bytes).into_diagnostic()?;
@@ -82,12 +86,12 @@ impl KeyPair for Ed25519KeyPair {
     }
 }
 
-fn validate_digest(digest: &config::DigestAlgorithm) -> Result<()> {
-    // Any value for `digest` other than `Sha_512` is an error.
-    match digest {
+fn validate_digest(digest: Option<&config::DigestAlgorithm>) -> Result<()> {
+    // any value for `digest` other than `None` or `Sha_512` is an error
+    match digest.unwrap_or(&config::DigestAlgorithm::Sha_512) {
         config::DigestAlgorithm::Sha_512 => Ok(()),
         _ => Err(miette::miette!(
-            "Invalid digest algorithm, ed25519 signatures require 'sha-512'"
+            "Invalid digest algorithm, use 'sha-512' or None"
         )),
     }
 }
