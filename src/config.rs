@@ -98,6 +98,7 @@ pub struct Certificate {
 pub enum DigestAlgorithm {
     Sha_256,
     Sha_384,
+    Sha_512,
 }
 
 #[derive(knuffel::Decode, Debug)]
