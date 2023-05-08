@@ -176,6 +176,9 @@ pub struct ExtendedKeyUsageExtension {
 
     #[knuffel(child)]
     pub id_kp_ocspsigning: bool,
+
+    #[knuffel(children(name = "oid"), unwrap(argument))]
+    pub oids: Vec<String>,
 }
 
 #[derive(knuffel::Decode, Debug)]
