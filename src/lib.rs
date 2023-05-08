@@ -141,6 +141,10 @@ impl KeyPair for RsaKeyPair {
                 oid: const_oid::db::rfc5912::SHA_384_WITH_RSA_ENCRYPTION,
                 parameters: None,
             },
+            config::DigestAlgorithm::Sha_512 => spki::AlgorithmIdentifierOwned {
+                oid: const_oid::db::rfc5912::SHA_512_WITH_RSA_ENCRYPTION,
+                parameters: None,
+            },
         }
     }
 
@@ -157,6 +161,14 @@ impl KeyPair for RsaKeyPair {
             config::DigestAlgorithm::Sha_384 => {
                 let hash = sha2::Sha384::new().chain_update(bytes).finalize();
                 let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha384>();
+                let mut rng = rand::thread_rng();
+                signer
+                    .sign(Some(&mut rng), &*self.private_key, &hash)
+                    .into_diagnostic()
+            }
+            config::DigestAlgorithm::Sha_512 => {
+                let hash = sha2::Sha512::new().chain_update(bytes).finalize();
+                let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha512>();
                 let mut rng = rand::thread_rng();
                 signer
                     .sign(Some(&mut rng), &*self.private_key, &hash)
@@ -222,6 +234,10 @@ impl KeyPair for P384KeyPair {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_384,
                 parameters: None,
             },
+            config::DigestAlgorithm::Sha_512 => spki::AlgorithmIdentifierOwned {
+                oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_512,
+                parameters: None,
+            },
         }
     }
 
@@ -235,6 +251,10 @@ impl KeyPair for P384KeyPair {
             }
             config::DigestAlgorithm::Sha_384 => {
                 let digest = sha2::Sha384::digest(bytes);
+                signer.sign_prehash(&digest).into_diagnostic()?
+            }
+            config::DigestAlgorithm::Sha_512 => {
+                let digest = sha2::Sha512::digest(bytes);
                 signer.sign_prehash(&digest).into_diagnostic()?
             }
         };
