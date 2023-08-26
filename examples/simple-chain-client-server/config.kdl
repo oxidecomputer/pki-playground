@@ -124,6 +124,11 @@ certificate "TEST USE ONLY - Test Int A" {
     serial-number "01"
 }
 
+certificate-request "TEST USE ONLY - Test CSR A" {
+    subject-entity "TEST USE ONLY - Test Server A"
+    subject-key "TEST USE ONLY - Test Server A"
+    digest-algorithm "sha-256"
+}
 
 certificate "TEST USE ONLY - Test Server A" {
     subject-entity "TEST USE ONLY - Test Server A"
