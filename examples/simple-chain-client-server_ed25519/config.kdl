@@ -65,6 +65,10 @@ entity "TEST USE ONLY - Test Client A" {
     common-name "TEST USE ONLY - Test Client A"
 }
 
+certificate-request "TEST USE ONLY - Test Server A" {
+    subject-entity "TEST USE ONLY - Test Server A"
+    subject-key "TEST USE ONLY - Test Server A"
+}
 
 certificate "TEST USE ONLY - Test CA A" {
     subject-entity "TEST USE ONLY - Test CA A"

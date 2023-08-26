@@ -16,6 +16,9 @@ pub struct Document {
 
     #[knuffel(children(name = "certificate"))]
     pub certificates: Vec<Certificate>,
+
+    #[knuffel(children(name = "certificate-request"))]
+    pub certificate_requests: Vec<CertificateRequest>,
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -92,6 +95,19 @@ pub struct Certificate {
 
     #[knuffel(child, unwrap(children))]
     pub extensions: Vec<X509Extensions>,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct CertificateRequest {
+    #[knuffel(argument)]
+    pub name: String,
+
+    #[knuffel(child, unwrap(argument))]
+    pub subject_entity: String,
+    #[knuffel(child, unwrap(argument))]
+    pub subject_key: String,
+    #[knuffel(child, unwrap(argument))]
+    pub digest_algorithm: Option<DigestAlgorithm>,
 }
 
 #[derive(knuffel::DecodeScalar, Debug)]

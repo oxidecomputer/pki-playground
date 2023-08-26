@@ -8,7 +8,7 @@ use der::{
     DateTime, Decode, Encode,
 };
 use miette::{Context, IntoDiagnostic, Result};
-use pki_playground::{Extension, KeyPair};
+use pki_playground::{config, Entity, Extension, KeyPair};
 use spki::SubjectPublicKeyInfo;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
@@ -16,8 +16,13 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::SystemTime;
-use x509_cert::time::Validity;
-use x509_cert::{Certificate, TbsCertificate};
+use x509_cert::{
+    attr::Attributes,
+    der::asn1::BitString,
+    request::{CertReq, CertReqInfo},
+    time::Validity,
+    Certificate, TbsCertificate,
+};
 
 #[derive(clap::Parser)]
 struct Options {
@@ -38,6 +43,7 @@ enum OutputFileExistsBehavior {
 #[derive(clap::Subcommand)]
 enum Action {
     GenerateKeyPairs(GenerateKeyPairsOpts),
+    GenerateCertificateRequests(GenerateCertificateRequestsOpts),
     GenerateCertificates(GenerateCertificatesOpts),
 }
 
@@ -45,6 +51,13 @@ enum Action {
 struct GenerateKeyPairsOpts {
     /// action to take if an output file already exists
     #[arg(long, default_value = "skip")]
+    output_exists: OutputFileExistsBehavior,
+}
+
+#[derive(clap::Args)]
+struct GenerateCertificateRequestsOpts {
+    /// action to take if an output file already exists
+    #[arg(long, default_value = "overwrite")]
     output_exists: OutputFileExistsBehavior,
 }
 
@@ -86,6 +99,37 @@ fn write_to_file(
         .wrap_err(format!("Unable to write to file \"{}\"", filename))
 }
 
+fn load_keypairs(
+    key_pairs_cfg: &Vec<config::KeyPair>,
+) -> Result<HashMap<String, Box<dyn KeyPair>>> {
+    let mut key_pairs = HashMap::new();
+
+    for kp_config in key_pairs_cfg {
+        let kp_filename = format!("{}.key.pem", kp_config.name);
+        let kp_pem = std::fs::read_to_string(&kp_filename)
+            .into_diagnostic()
+            .wrap_err(format!(
+                "Unable to load key pair \"{}\" from \"{}\"",
+                kp_config.name, &kp_filename
+            ))?;
+        let kp = <dyn KeyPair>::from_pem(kp_config, &kp_pem)?;
+        key_pairs.insert(String::from(kp.name()), kp);
+    }
+
+    Ok(key_pairs)
+}
+
+fn load_entities(entities: &Vec<config::Entity>) -> Result<HashMap<String, Entity>> {
+    let mut entity_map = HashMap::new();
+
+    for entity_config in entities {
+        let entity = pki_playground::Entity::try_from(entity_config)?;
+        entity_map.insert(String::from(entity.name()), entity);
+    }
+
+    Ok(entity_map)
+}
+
 fn main() -> Result<()> {
     let opts = Options::parse();
 
@@ -112,25 +156,52 @@ fn main() -> Result<()> {
                 )?
             }
         }
-        Action::GenerateCertificates(action_opts) => {
-            let mut key_pairs = HashMap::new();
-            for kp_config in &doc.key_pairs {
-                let kp_filename = format!("{}.key.pem", kp_config.name);
-                let kp_pem = std::fs::read_to_string(&kp_filename)
-                    .into_diagnostic()
-                    .wrap_err(format!(
-                        "Unable to load key pair \"{}\" from \"{}\"",
-                        kp_config.name, &kp_filename
-                    ))?;
-                let kp = <dyn KeyPair>::from_pem(kp_config, &kp_pem)?;
-                key_pairs.insert(String::from(kp.name()), kp);
-            }
+        Action::GenerateCertificateRequests(action_opts) => {
+            let key_pairs = load_keypairs(&doc.key_pairs)?;
+            let entities = load_entities(&doc.entities)?;
 
-            let mut entities = HashMap::new();
-            for entity_config in &doc.entities {
-                let entity = pki_playground::Entity::try_from(entity_config)?;
-                entities.insert(String::from(entity.name()), entity);
+            for csr_config in &doc.certificate_requests {
+                let subject_kp = key_pairs.get(&csr_config.subject_key).unwrap();
+                let public_key = SubjectPublicKeyInfo::from_der(subject_kp.to_spki()?.as_bytes())
+                    .into_diagnostic()?;
+
+                let subject = entities.get(&csr_config.subject_entity).unwrap();
+                let subject = subject.distinguished_name().clone();
+
+                let info = CertReqInfo {
+                    version: x509_cert::request::Version::V1,
+                    subject,
+                    public_key,
+                    attributes: Attributes::default(),
+                };
+                let info_der = info.to_der().into_diagnostic()?;
+
+                let signature = subject_kp
+                    .signature(csr_config.digest_algorithm.as_ref(), &info_der)
+                    .wrap_err("Failed to sign CSR info structure")?;
+                let signature = BitString::from_bytes(&signature).into_diagnostic()?;
+
+                let algorithm = csr_config.digest_algorithm.as_ref();
+                let algorithm = subject_kp.signature_algorithm(algorithm)?;
+
+                let csr = CertReq {
+                    info,
+                    algorithm,
+                    signature,
+                };
+
+                let csr_filename = format!("{}.csr.der", csr_config.name);
+                println!("Writing certificate request to \"{}\"", &csr_filename);
+                write_to_file(
+                    &csr_filename,
+                    &csr.to_der().into_diagnostic()?,
+                    action_opts.output_exists,
+                )?
             }
+        }
+        Action::GenerateCertificates(action_opts) => {
+            let key_pairs = load_keypairs(&doc.key_pairs)?;
+            let entities = load_entities(&doc.entities)?;
 
             for cert_config in &doc.certificates {
                 let subject_entity = entities.get(&cert_config.subject_entity).unwrap();
@@ -256,8 +327,7 @@ fn main() -> Result<()> {
                 let cert = Certificate {
                     tbs_certificate: tbs_cert,
                     signature_algorithm: signature_algorithm.clone(),
-                    signature: x509_cert::der::asn1::BitString::from_bytes(&cert_signature)
-                        .into_diagnostic()?,
+                    signature: BitString::from_bytes(&cert_signature).into_diagnostic()?,
                 };
 
                 let cert_filename = format!("{}.cert.der", cert_config.name);
