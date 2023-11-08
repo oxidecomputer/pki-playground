@@ -40,6 +40,7 @@ enum OutputFileExistsBehavior {
     Overwrite,
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(clap::Subcommand)]
 enum Action {
     GenerateKeyPairs(GenerateKeyPairsOpts),
