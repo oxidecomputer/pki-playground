@@ -5,16 +5,11 @@
 use crate::config;
 use crate::KeyPair;
 
+use const_oid::db::rfc8410::ID_ED_25519;
 use ed25519_dalek::pkcs8::{DecodePrivateKey, EncodePrivateKey, EncodePublicKey};
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use miette::{IntoDiagnostic, Result};
 use zeroize::Zeroizing;
-
-// Local constant for Ed25519 signature OID. We sent a patch upstream to get
-// OIDs from RFD 8410 into the const-oid crate but it hasn't made it into a
-// release yet (as of const-oid v0.9.2).
-pub const ID_ED_25519: crate::ObjectIdentifier =
-    const_oid::ObjectIdentifier::new_unwrap("1.3.101.112");
 
 pub struct Ed25519KeyPair {
     name: String,
