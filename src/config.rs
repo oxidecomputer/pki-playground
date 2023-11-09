@@ -37,8 +37,6 @@ pub enum KeyType {
 pub struct RsaKeyConfig {
     #[knuffel(property, default = 2048)]
     pub num_bits: usize,
-    #[knuffel(property, default = 2)]
-    pub num_primes: usize,
     #[knuffel(property, default = 65537)]
     pub public_exponent: usize,
 }
