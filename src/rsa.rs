@@ -8,22 +8,23 @@ use crate::KeyPair;
 use digest::Digest;
 use miette::{IntoDiagnostic, Result};
 use pkcs8::{DecodePrivateKey, EncodePrivateKey, EncodePublicKey};
-use rsa::{BigUint, PublicKeyParts, RsaPrivateKey, SignatureScheme};
+use rsa::{
+    traits::{PublicKeyParts, SignatureScheme},
+    BigUint, RsaPrivateKey,
+};
 use zeroize::Zeroizing;
 
 pub struct RsaKeyPair {
     name: String,
-    private_key: Zeroizing<rsa::RsaPrivateKey>,
+    private_key: RsaPrivateKey,
 }
 
 impl RsaKeyPair {
     pub fn new(name: &str, config: &config::RsaKeyConfig) -> Result<Self> {
         let mut rng = rand::thread_rng();
-        let private_key = Zeroizing::new(RsaPrivateKey::new_with_exp(
-            &mut rng,
-            config.num_bits,
-            &config.public_exponent.into()
-        ).into_diagnostic()?);
+        let private_key =
+            RsaPrivateKey::new_with_exp(&mut rng, config.num_bits, &config.public_exponent.into())
+                .into_diagnostic()?;
 
         Ok(RsaKeyPair {
             name: name.into(),
@@ -32,7 +33,7 @@ impl RsaKeyPair {
     }
 
     pub fn from_pem(name: &str, config: &config::RsaKeyConfig, s: &str) -> Result<Self> {
-        let private_key = Zeroizing::new(RsaPrivateKey::from_pkcs8_pem(s).into_diagnostic()?);
+        let private_key = RsaPrivateKey::from_pkcs8_pem(s).into_diagnostic()?;
         if private_key.size() * 8 != config.num_bits {
             miette::bail!(
                 "PEM-encoded RSA private key has modulus size {} but config specifies {}",
@@ -68,7 +69,10 @@ impl KeyPair for RsaKeyPair {
     }
 
     fn to_spki(&self) -> Result<spki::Document> {
-        self.private_key.to_public_key_der().into_diagnostic()
+        self.private_key
+            .to_public_key()
+            .to_public_key_der()
+            .into_diagnostic()
     }
 
     fn signature_algorithm(
@@ -112,7 +116,7 @@ impl KeyPair for RsaKeyPair {
                 let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha256>();
                 let mut rng = rand::thread_rng();
                 signer
-                    .sign(Some(&mut rng), &*self.private_key, &hash)
+                    .sign(Some(&mut rng), &self.private_key, &hash)
                     .into_diagnostic()
             }
             config::DigestAlgorithm::Sha_384 => {
@@ -120,7 +124,7 @@ impl KeyPair for RsaKeyPair {
                 let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha384>();
                 let mut rng = rand::thread_rng();
                 signer
-                    .sign(Some(&mut rng), &*self.private_key, &hash)
+                    .sign(Some(&mut rng), &self.private_key, &hash)
                     .into_diagnostic()
             }
             config::DigestAlgorithm::Sha_512 => {
@@ -128,7 +132,7 @@ impl KeyPair for RsaKeyPair {
                 let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha512>();
                 let mut rng = rand::thread_rng();
                 signer
-                    .sign(Some(&mut rng), &*self.private_key, &hash)
+                    .sign(Some(&mut rng), &self.private_key, &hash)
                     .into_diagnostic()
             }
         }
