@@ -19,15 +19,11 @@ pub struct RsaKeyPair {
 impl RsaKeyPair {
     pub fn new(name: &str, config: &config::RsaKeyConfig) -> Result<Self> {
         let mut rng = rand::thread_rng();
-        let private_key = Zeroizing::new(
-            rsa::algorithms::generate_multi_prime_key_with_exp(
-                &mut rng,
-                config.num_primes,
-                config.num_bits,
-                &config.public_exponent.into(),
-            )
-            .into_diagnostic()?,
-        );
+        let private_key = Zeroizing::new(RsaPrivateKey::new_with_exp(
+            &mut rng,
+            config.num_bits,
+            &config.public_exponent.into()
+        ).into_diagnostic()?);
 
         Ok(RsaKeyPair {
             name: name.into(),
