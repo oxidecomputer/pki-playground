@@ -13,7 +13,7 @@ use miette::{IntoDiagnostic, Result};
 use sha1::Sha1;
 use x509_cert::{
     attr::AttributeTypeAndValue,
-    ext::pkix::{BasicConstraints, KeyUsage},
+    ext::pkix::{certpolicy::PolicyInformation, BasicConstraints, KeyUsage},
     name::{Name, RdnSequence, RelativeDistinguishedName},
     Certificate, TbsCertificate,
 };
@@ -487,11 +487,8 @@ impl CertificatePoliciesExtension {
     pub fn from_config(config: &config::CertificatePoliciesExtension) -> Result<Self> {
         let mut policies = Vec::new();
 
-        for oid in config.oids.iter() {
-            policies.push(x509_cert::ext::pkix::certpolicy::PolicyInformation {
-                policy_identifier: ObjectIdentifier::new(oid).into_diagnostic()?,
-                policy_qualifiers: None,
-            });
+        for policy in &config.policies {
+            policies.push(PolicyInformation::try_from(policy)?);
         }
 
         let der = x509_cert::ext::pkix::CertificatePolicies(policies)
