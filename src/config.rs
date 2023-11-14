@@ -5,6 +5,7 @@
 use std::collections::HashSet;
 
 use miette::{IntoDiagnostic, Result};
+use x509_cert::{ext::pkix::certpolicy::PolicyInformation, spki::ObjectIdentifier};
 
 #[derive(knuffel::Decode, Debug)]
 pub struct Document {
@@ -216,13 +217,98 @@ pub struct AuthorityKeyIdentifierExtension {
     pub issuer: bool,
 }
 
+/// The `CertificatePolicy` enum represents the set of KDL nodes that `pki-playground` can map to
+/// OIDs. Configs may also provide OIDs in their string forms using the `oid` node.
+#[derive(knuffel::Decode, Debug)]
+pub enum CertificatePolicy {
+    /// Initial attestation policy OID from [DICE Certificate
+    /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.3
+    TcgDiceKpAttestInit,
+    /// Local attestation policy OID from [DICE Certificate
+    /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.4
+    TcgDiceKpAttestLoc,
+    /// Initial assertion policy OID from [DICE Certificate
+    /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.5
+    TcgDiceKpAssertInit,
+    /// Local assertion policy OID from [DICE Certificate
+    /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.6
+    TcgDiceKpAssertLoc,
+    /// Embedded certificate authority (ECA) policy OID from [DICE Certificate
+    /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.7
+    TcgDiceKpEca,
+    /// Initial identity policy OID from [DICE Certificate
+    /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.1
+    TcgDiceKpIdentityInit,
+    /// Local identity policy OID from [DICE Certificate
+    /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.2
+    TcgDiceKpIdentityLoc,
+    /// Platform identity policy from [OANA x.509 certificate policy
+    /// terms](https://github.com/oxidecomputer/oana#asn1-object-identifiers)
+    OanaPlatformIdentity,
+    /// RoT code signing development policy from [OANA x.509 certificate policy
+    /// terms](https://github.com/oxidecomputer/oana#asn1-object-identifiers)
+    OanaRotCodeSigningDevelopment,
+    /// RoT code signing release policy from [OANA x.509 certificate policy
+    /// terms](https://github.com/oxidecomputer/oana#asn1-object-identifiers)
+    OanaRotCodeSigningRelease,
+    /// `oid` node taking an OID string argument
+    Oid(#[knuffel(argument)] String),
+}
+
+impl TryFrom<&CertificatePolicy> for PolicyInformation {
+    type Error = miette::Error;
+
+    /// Map `CertificatePolicy` variants to the appropriate `PolicyInformation` struct. This is
+    /// required as part of our conversion from the KDL to the DER certificate encoding.
+    fn try_from(value: &CertificatePolicy) -> Result<Self> {
+        let oid = match value {
+            CertificatePolicy::TcgDiceKpIdentityInit => {
+                ObjectIdentifier::new("2.23.133.5.4.100.6").into_diagnostic()?
+            }
+            CertificatePolicy::TcgDiceKpIdentityLoc => {
+                ObjectIdentifier::new("2.23.133.5.4.100.7").into_diagnostic()?
+            }
+            CertificatePolicy::TcgDiceKpAttestInit => {
+                ObjectIdentifier::new("2.23.133.5.4.100.8").into_diagnostic()?
+            }
+            CertificatePolicy::TcgDiceKpAttestLoc => {
+                ObjectIdentifier::new("2.23.133.5.4.100.9").into_diagnostic()?
+            }
+            CertificatePolicy::TcgDiceKpAssertInit => {
+                ObjectIdentifier::new("2.23.133.5.4.100.10").into_diagnostic()?
+            }
+            CertificatePolicy::TcgDiceKpAssertLoc => {
+                ObjectIdentifier::new("2.23.133.5.4.100.11").into_diagnostic()?
+            }
+            CertificatePolicy::TcgDiceKpEca => {
+                ObjectIdentifier::new("2.23.133.5.4.100.12").into_diagnostic()?
+            }
+            CertificatePolicy::OanaRotCodeSigningRelease => {
+                ObjectIdentifier::new("1.3.6.1.4.1.57551.1.1").into_diagnostic()?
+            }
+            CertificatePolicy::OanaRotCodeSigningDevelopment => {
+                ObjectIdentifier::new("1.3.6.1.4.1.57551.1.2").into_diagnostic()?
+            }
+            CertificatePolicy::OanaPlatformIdentity => {
+                ObjectIdentifier::new("1.3.6.1.4.1.57551.1.3").into_diagnostic()?
+            }
+            CertificatePolicy::Oid(s) => ObjectIdentifier::new(s).into_diagnostic()?,
+        };
+
+        Ok(PolicyInformation {
+            policy_identifier: oid,
+            policy_qualifiers: None,
+        })
+    }
+}
+
 #[derive(knuffel::Decode, Debug)]
 pub struct CertificatePoliciesExtension {
     #[knuffel(property)]
     pub critical: bool,
 
-    #[knuffel(children(name = "oid"), unwrap(argument))]
-    pub oids: Vec<String>,
+    #[knuffel(children)]
+    pub policies: Vec<CertificatePolicy>,
 }
 
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
