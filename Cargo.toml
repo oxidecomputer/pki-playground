@@ -11,7 +11,7 @@ clap = { version = "4.4.8", features = ["derive"] }
 const-oid = { version = "0.9.5", features = ["db"] }
 der = "0.7.8"
 digest = "0.10.7"
-ed25519-dalek = { version = "2.0.0", features = ["pem", "rand_core", "std", "zeroize"] }
+ed25519-dalek = { version = "2.1.0", features = ["pem", "rand_core", "std", "zeroize"] }
 flagset = "0.4.4"
 hex = "0.4.3"
 knuffel = "3.2.0"
