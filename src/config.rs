@@ -93,7 +93,7 @@ pub struct Certificate {
     pub serial_number: String,
 
     #[knuffel(child, unwrap(children))]
-    pub extensions: Vec<X509Extensions>,
+    pub extensions: Option<Vec<X509Extensions>>,
 }
 
 #[derive(knuffel::Decode, Debug)]

@@ -297,27 +297,29 @@ fn main() -> Result<()> {
                     extensions: None,
                 };
 
-                for extension_config in &cert_config.extensions {
-                    let extension = <dyn Extension>::from_config(
-                        extension_config,
-                        &tbs_cert,
-                        issuer_cert.as_ref(),
-                    )?;
+                if let Some(v) = &cert_config.extensions {
+                    for extension_config in v {
+                        let extension = <dyn Extension>::from_config(
+                            extension_config,
+                            &tbs_cert,
+                            issuer_cert.as_ref(),
+                        )?;
 
-                    let cert_extension = x509_cert::ext::Extension {
-                        extn_id: extension.oid(),
-                        critical: extension.is_critical(),
-                        extn_value: x509_cert::der::asn1::OctetString::new(extension.as_der())
-                            .into_diagnostic()?,
-                    };
+                        let cert_extension = x509_cert::ext::Extension {
+                            extn_id: extension.oid(),
+                            critical: extension.is_critical(),
+                            extn_value: x509_cert::der::asn1::OctetString::new(extension.as_der())
+                                .into_diagnostic()?,
+                        };
 
-                    let mut ext_vec = if let Some(x) = tbs_cert.extensions {
-                        x.clone()
-                    } else {
-                        Vec::new()
-                    };
-                    ext_vec.push(cert_extension);
-                    tbs_cert.extensions = Some(ext_vec);
+                        let mut ext_vec = if let Some(x) = tbs_cert.extensions {
+                            x.clone()
+                        } else {
+                            Vec::new()
+                        };
+                        ext_vec.push(cert_extension);
+                        tbs_cert.extensions = Some(ext_vec);
+                    }
                 }
 
                 let tbs_cert_der = tbs_cert.to_der().into_diagnostic()?;
