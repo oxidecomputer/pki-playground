@@ -4,6 +4,7 @@
 
 use clap::{Parser, ValueEnum};
 use miette::{Context, IntoDiagnostic, Result};
+use pem_rfc7468::LineEnding;
 use pki_playground::{config, Entity, Extension, KeyPair};
 use spki::SubjectPublicKeyInfo;
 use std::collections::HashMap;
@@ -16,7 +17,7 @@ use x509_cert::{
     attr::Attributes,
     der::{
         asn1::{BitString, GeneralizedTime, UtcTime},
-        DateTime, Decode, Encode,
+        DateTime, Decode, DecodePem, Encode, EncodePem,
     },
     request::{CertReq, CertReqInfo},
     time::Validity,
@@ -190,11 +191,11 @@ fn main() -> Result<()> {
                     signature,
                 };
 
-                let csr_filename = format!("{}.csr.der", csr_config.name);
+                let csr_filename = format!("{}.csr.pem", csr_config.name);
                 println!("Writing certificate request to \"{}\"", &csr_filename);
                 write_to_file(
                     &csr_filename,
-                    &csr.to_der().into_diagnostic()?,
+                    csr.to_pem(LineEnding::CRLF).into_diagnostic()?.as_bytes(),
                     action_opts.output_exists,
                 )?
             }
@@ -207,10 +208,10 @@ fn main() -> Result<()> {
                 let subject_entity = entities.get(&cert_config.subject_entity).unwrap();
                 let subject_kp = key_pairs.get(&cert_config.subject_key).unwrap();
 
-                let issuer_cert_der =
+                let issuer_cert_pem =
                     if let Some(issuer_cert_name) = &cert_config.issuer_certificate {
-                        let issuer_cert_filename = format!("{}.cert.der", issuer_cert_name);
-                        let mut issuer_cert_der = Vec::new();
+                        let issuer_cert_filename = format!("{}.cert.pem", issuer_cert_name);
+                        let mut issuer_cert_pem = Vec::new();
                         let mut issuer_cert_file = std::fs::File::open(&issuer_cert_filename)
                             .into_diagnostic()
                             .wrap_err(format!(
@@ -218,15 +219,15 @@ fn main() -> Result<()> {
                                 issuer_cert_name, issuer_cert_filename
                             ))?;
                         issuer_cert_file
-                            .read_to_end(&mut issuer_cert_der)
+                            .read_to_end(&mut issuer_cert_pem)
                             .into_diagnostic()?;
-                        Some(issuer_cert_der)
+                        Some(issuer_cert_pem)
                     } else {
                         None
                     };
 
-                let issuer_cert = if let Some(issuer_cert_der) = &issuer_cert_der {
-                    Some(x509_cert::Certificate::from_der(issuer_cert_der).into_diagnostic()?)
+                let issuer_cert = if let Some(issuer_cert_pem) = &issuer_cert_pem {
+                    Some(x509_cert::Certificate::from_pem(issuer_cert_pem).into_diagnostic()?)
                 } else {
                     None
                 };
@@ -332,11 +333,11 @@ fn main() -> Result<()> {
                     signature: BitString::from_bytes(&cert_signature).into_diagnostic()?,
                 };
 
-                let cert_filename = format!("{}.cert.der", cert_config.name);
+                let cert_filename = format!("{}.cert.pem", cert_config.name);
                 println!("Writing certificate to \"{}\"", &cert_filename);
                 write_to_file(
                     &cert_filename,
-                    &cert.to_der().into_diagnostic()?,
+                    cert.to_pem(LineEnding::CRLF).into_diagnostic()?.as_bytes(),
                     action_opts.output_exists,
                 )?
             }
