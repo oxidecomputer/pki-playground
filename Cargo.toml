@@ -16,6 +16,7 @@ hex = "0.4.3"
 knuffel = "3.2.0"
 miette = { version = "5.10.0", features = ["fancy"] }
 p384 = "0.13.0"
+pem-rfc7468 = "0.7"
 pkcs8 = { version = "0.10.2", features = ["pem"] }
 rand = "0.8.5"
 rsa = { version = "0.9.6", features = ["sha2"] }
