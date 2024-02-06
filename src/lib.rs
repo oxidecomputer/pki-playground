@@ -3,16 +3,16 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use const_oid::{AssociatedOid, ObjectIdentifier};
-use der::{
-    asn1::{SetOfVec, Utf8StringRef},
-    Decode as _, Encode as _,
-};
 use digest::Digest;
 use flagset::FlagSet;
 use miette::{IntoDiagnostic, Result};
 use sha1::Sha1;
 use x509_cert::{
     attr::AttributeTypeAndValue,
+    der::{
+        asn1::{SetOfVec, Utf8StringRef},
+        Decode as _, Encode as _,
+    },
     ext::pkix::{certpolicy::PolicyInformation, BasicConstraints, KeyUsage},
     name::{Name, RdnSequence, RelativeDistinguishedName},
     Certificate, TbsCertificate,

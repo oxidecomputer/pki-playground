@@ -738,7 +738,6 @@ version = "0.2.0"
 dependencies = [
  "clap",
  "const-oid",
- "der",
  "digest",
  "ed25519-dalek",
  "flagset",
