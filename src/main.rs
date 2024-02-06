@@ -3,10 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use clap::{Parser, ValueEnum};
-use der::{
-    asn1::{GeneralizedTime, UtcTime},
-    DateTime, Decode, Encode,
-};
 use miette::{Context, IntoDiagnostic, Result};
 use pki_playground::{config, Entity, Extension, KeyPair};
 use spki::SubjectPublicKeyInfo;
@@ -18,7 +14,10 @@ use std::str::FromStr;
 use std::time::SystemTime;
 use x509_cert::{
     attr::Attributes,
-    der::asn1::BitString,
+    der::{
+        asn1::{BitString, GeneralizedTime, UtcTime},
+        DateTime, Decode, Encode,
+    },
     request::{CertReq, CertReqInfo},
     time::Validity,
     Certificate, TbsCertificate,
