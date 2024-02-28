@@ -101,7 +101,7 @@ impl<'a> TryFrom<&'a config::Entity> for Entity {
         for base_dn_attr in &value.base_dn {
             let atv = match base_dn_attr {
                 config::EntityNameComponent::CountryName(x) => AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::C,
+                    oid: const_oid::db::rfc4519::COUNTRY_NAME,
                     value: x509_cert::der::Any::from(PrintableStringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::StateOrProvinceName(x) => AttributeTypeAndValue {
@@ -109,15 +109,15 @@ impl<'a> TryFrom<&'a config::Entity> for Entity {
                     value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::LocalityName(x) => AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::L,
+                    oid: const_oid::db::rfc4519::LOCALITY_NAME,
                     value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::OrganizationalUnitName(x) => AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::OU,
+                    oid: const_oid::db::rfc4519::ORGANIZATIONAL_UNIT_NAME,
                     value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::OrganizationName(x) => AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::O,
+                    oid: const_oid::db::rfc4519::ORGANIZATION_NAME,
                     value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
                 },
             };
@@ -126,7 +126,7 @@ impl<'a> TryFrom<&'a config::Entity> for Entity {
         }
 
         rdns.push([AttributeTypeAndValue {
-            oid: const_oid::db::rfc4519::CN,
+            oid: const_oid::db::rfc4519::COMMON_NAME,
             value: x509_cert::der::Any::from(
                 Utf8StringRef::new(&value.common_name).into_diagnostic()?,
             ),
