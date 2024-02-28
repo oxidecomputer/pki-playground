@@ -10,7 +10,7 @@ use sha1::Sha1;
 use x509_cert::{
     attr::AttributeTypeAndValue,
     der::{
-        asn1::{SetOfVec, Utf8StringRef},
+        asn1::{PrintableStringRef, SetOfVec, Utf8StringRef},
         Decode as _, Encode as _,
     },
     ext::pkix::{certpolicy::PolicyInformation, BasicConstraints, KeyUsage},
@@ -101,8 +101,8 @@ impl<'a> TryFrom<&'a config::Entity> for Entity {
         for base_dn_attr in &value.base_dn {
             let atv = match base_dn_attr {
                 config::EntityNameComponent::CountryName(x) => AttributeTypeAndValue {
-                    oid: const_oid::db::rfc4519::CN,
-                    value: x509_cert::der::Any::from(Utf8StringRef::new(x).into_diagnostic()?),
+                    oid: const_oid::db::rfc4519::C,
+                    value: x509_cert::der::Any::from(PrintableStringRef::new(x).into_diagnostic()?),
                 },
                 config::EntityNameComponent::StateOrProvinceName(x) => AttributeTypeAndValue {
                     oid: const_oid::db::rfc4519::ST,
