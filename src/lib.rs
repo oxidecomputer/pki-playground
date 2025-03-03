@@ -81,7 +81,7 @@ impl<'a> Entity {
         &self.name
     }
 
-    pub fn distinguished_name(&'a self) -> &Name {
+    pub fn distinguished_name(&'a self) -> &'a Name {
         &self.distinguished_name
     }
 }
