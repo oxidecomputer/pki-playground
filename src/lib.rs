@@ -3,14 +3,17 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use const_oid::{AssociatedOid, ObjectIdentifier};
-use digest::Digest;
+use der::Sequence;
+use digest::{typenum::Unsigned, Digest, OutputSizeUser};
 use flagset::FlagSet;
-use miette::{IntoDiagnostic, Result};
+use miette::{IntoDiagnostic, Result, WrapErr};
 use sha1::Sha1;
+use sha2::{Sha256, Sha384, Sha512};
 use x509_cert::{
     attr::AttributeTypeAndValue,
     der::{
-        asn1::{PrintableStringRef, SetOfVec, Utf8StringRef},
+        self,
+        asn1::{OctetString, PrintableStringRef, SetOfVec, Utf8StringRef},
         Decode as _, Encode as _,
     },
     ext::pkix::{certpolicy::PolicyInformation, BasicConstraints, KeyUsage},
@@ -26,6 +29,7 @@ pub mod ed25519;
 pub mod p384;
 pub mod rsa;
 
+use crate::config::DigestAlgorithm;
 use crate::p384::P384KeyPair;
 use crate::rsa::RsaKeyPair;
 use ed25519::Ed25519KeyPair;
@@ -175,6 +179,9 @@ impl dyn Extension {
             }
             config::X509Extensions::CertificatePolicies(x) => {
                 Ok(Box::new(CertificatePoliciesExtension::from_config(x)?))
+            }
+            config::X509Extensions::DiceTcbInfo(c) => {
+                Ok(Box::new(DiceTcbInfoExtension::from_config(c)?))
             }
         }
     }
@@ -498,6 +505,116 @@ impl CertificatePoliciesExtension {
         Ok(CertificatePoliciesExtension {
             is_critical: config.critical,
             der,
+        })
+    }
+}
+
+// DICE Attestation Architecture §6.1.1:
+// FWID ::== SEQUENCE {
+#[derive(Debug, Sequence)]
+pub struct Fwid {
+    // hashAlg OBJECT IDENTIFIER,
+    hash_algorithm: ObjectIdentifier,
+    // digest OCTET STRING
+    digest: OctetString,
+}
+
+impl Fwid {
+    fn from_config(config: &config::Fwid) -> Result<Self> {
+        let (hash_algorithm, length) = match config.digest_algorithm {
+            DigestAlgorithm::Sha_256 => {
+                (Sha256::OID, <Sha256 as OutputSizeUser>::OutputSize::USIZE)
+            }
+            DigestAlgorithm::Sha_384 => {
+                (Sha384::OID, <Sha384 as OutputSizeUser>::OutputSize::USIZE)
+            }
+            DigestAlgorithm::Sha_512 => {
+                (Sha512::OID, <Sha512 as OutputSizeUser>::OutputSize::USIZE)
+            }
+        };
+
+        let digest = hex::decode(&config.digest)
+            .into_diagnostic()
+            .wrap_err("Decode FWID digest")?;
+
+        if digest.len() != length {
+            return Err(miette::miette!(
+                "Unexpected digest length: expected {}, got {}",
+                length,
+                digest.len(),
+            ));
+        }
+
+        let digest = OctetString::new(digest)
+            .into_diagnostic()
+            .wrap_err("digest to OctetString")?;
+
+        Ok(Fwid {
+            digest,
+            hash_algorithm,
+        })
+    }
+}
+
+// NOTE: All fields in this structure are optional and we only implement
+// support for the ones that we currently need. Additional fields should
+// be added as needed.
+//
+// DICE Attestation Architecture §6.1.1:
+// DiceTcbInfo ::== SEQUENCE {
+#[derive(Debug, Sequence)]
+pub struct DiceTcbInfo {
+    // fwids [6] IMPLICIT FWIDLIST OPTIONAL,
+    // where FWIDLIST ::== SEQUENCE SIZE (1..MAX) OF FWID
+    #[asn1(context_specific = "6", tag_mode = "IMPLICIT", optional = "true")]
+    fwids: Option<Vec<Fwid>>,
+}
+
+#[derive(Debug)]
+pub struct DiceTcbInfoExtension {
+    der: Vec<u8>,
+    is_critical: bool,
+}
+
+impl Extension for DiceTcbInfoExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        Self::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+impl DiceTcbInfoExtension {
+    // tcg-dice-TcbInfo from ASN.1 in DICE Attestation Architecture §6.1.1
+    const OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.23.133.5.4.1");
+
+    pub fn from_config(config: &config::DiceTcbInfoExtension) -> Result<Self> {
+        let mut fwids: Vec<Fwid> = Vec::new();
+
+        for fwid in &config.fwid_list {
+            let fwid = Fwid::from_config(fwid).wrap_err("Fwid from config")?;
+
+            fwids.push(fwid);
+        }
+
+        let fwids = if !fwids.is_empty() { Some(fwids) } else { None };
+
+        let tcb_info = DiceTcbInfo { fwids };
+
+        let der = tcb_info
+            .to_der()
+            .into_diagnostic()
+            .wrap_err("fwid list to DER")?;
+
+        Ok(DiceTcbInfoExtension {
+            der,
+            is_critical: config.critical,
         })
     }
 }
