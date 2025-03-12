@@ -1,0 +1,111 @@
+key-pair "root" {
+    ed25519
+}
+
+entity "root" {
+    country-name "US"
+    organization-name "foo"
+    common-name "root"
+}
+
+certificate "root" {
+    issuer-entity "root"
+    issuer-key "root"
+
+    subject-entity "root"
+    subject-key "root"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "00"
+
+    extensions {
+        basic-constraints critical=true ca=true
+        subject-key-identifier critical=false
+
+        key-usage critical=true {
+            key-cert-sign
+            crl-sign
+        }
+
+        certificate-policies critical=true {
+            tcg-dice-kp-identity-init
+            tcg-dice-kp-attest-init
+            tcg-dice-kp-eca
+        }
+    }
+}
+
+key-pair "device-id" {
+    ed25519
+}
+
+entity "device-id" {
+    country-name "US"
+    organization-name "foo"
+    common-name "device-id"
+}
+
+certificate "device-id" {
+    issuer-certificate "root"
+    issuer-key "root"
+
+    subject-entity "device-id"
+    subject-key "device-id"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "00"
+
+    extensions {
+        basic-constraints critical=true ca=true
+        key-usage critical=true {
+            key-cert-sign
+        }
+        certificate-policies critical=true {
+            tcg-dice-kp-attest-init
+            tcg-dice-kp-eca
+        }
+    }
+}
+
+key-pair "alias" {
+    ed25519
+}
+
+entity "alias" {
+    country-name "US"
+    organization-name "foo"
+    common-name "alias"
+}
+
+certificate "alias" {
+    issuer-certificate "device-id"
+    issuer-key "device-id"
+
+    subject-entity "alias"
+    subject-key "alias"
+
+    not-after "9999-12-31T23:59:59Z"
+    serial-number "00"
+
+    extensions {
+        basic-constraints critical=true ca=true
+        key-usage critical=true {
+            digital-signature
+        }
+        certificate-policies critical=true {
+            tcg-dice-kp-attest-init
+        }
+        dice-tcb-info critical=true {
+            fwid-list {
+                fwid {
+                    digest-algorithm "sha-256"
+                    digest "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                }
+                fwid {
+                    digest-algorithm "sha-384"
+                    digest "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                }
+            }
+        }
+    }
+}

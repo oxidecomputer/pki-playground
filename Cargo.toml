@@ -9,6 +9,7 @@ license = "MPL-2.0"
 [dependencies]
 clap = { version = "4.5.31", features = ["derive"] }
 const-oid = { version = "0.9.6", features = ["db"] }
+der = { version = "0.7.9", features = ["std"] }
 digest = "0.10.7"
 ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core", "std", "zeroize"] }
 flagset = "0.4.6"

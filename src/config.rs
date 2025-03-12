@@ -125,6 +125,7 @@ pub enum X509Extensions {
     AuthorityKeyIdentifier(AuthorityKeyIdentifierExtension),
     ExtendedKeyUsage(ExtendedKeyUsageExtension),
     CertificatePolicies(CertificatePoliciesExtension),
+    DiceTcbInfo(DiceTcbInfoExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -253,6 +254,24 @@ pub enum CertificatePolicy {
     OanaRotCodeSigningRelease,
     /// `oid` node taking an OID string argument
     Oid(#[knuffel(argument)] String),
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct DiceTcbInfoExtension {
+    #[knuffel(property)]
+    pub critical: bool,
+
+    #[knuffel(child, unwrap(children(name = "fwid")))]
+    pub fwid_list: Vec<Fwid>,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct Fwid {
+    #[knuffel(child, unwrap(argument))]
+    pub digest_algorithm: DigestAlgorithm,
+
+    #[knuffel(child, unwrap(argument))]
+    pub digest: String,
 }
 
 impl TryFrom<&CertificatePolicy> for PolicyInformation {
