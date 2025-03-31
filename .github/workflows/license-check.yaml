@@ -6,4 +6,4 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Check License Header
-      uses: apache/skywalking-eyes/header@477772b7ef382b9024ac89676ebe6cbb26165a4f
+      uses: apache/skywalking-eyes/header@4f4281f13ebf854ebf514c1d5c3ea6797ae7e234
