@@ -96,6 +96,7 @@ impl KeyPair for RsaKeyPair {
                 oid: const_oid::db::rfc5912::SHA_512_WITH_RSA_ENCRYPTION,
                 parameters: None,
             },
+            d => return Err(miette::miette!("Unsupported digest algorithm: {:?}", d)),
         };
 
         Ok(alg_id)
@@ -135,6 +136,7 @@ impl KeyPair for RsaKeyPair {
                     .sign(Some(&mut rng), &self.private_key, &hash)
                     .into_diagnostic()
             }
+            d => Err(miette::miette!("Unsupported digest algorithm: {:?}", d)),
         }
     }
 }

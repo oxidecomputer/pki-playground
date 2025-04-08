@@ -9,6 +9,7 @@ use flagset::FlagSet;
 use miette::{IntoDiagnostic, Result, WrapErr};
 use sha1::Sha1;
 use sha2::{Sha256, Sha384, Sha512};
+use sha3::{Sha3_256, Sha3_384, Sha3_512};
 use x509_cert::{
     attr::AttributeTypeAndValue,
     der::{
@@ -531,6 +532,18 @@ impl Fwid {
             DigestAlgorithm::Sha_512 => {
                 (Sha512::OID, <Sha512 as OutputSizeUser>::OutputSize::USIZE)
             }
+            DigestAlgorithm::Sha3_256 => (
+                Sha3_256::OID,
+                <Sha3_256 as OutputSizeUser>::OutputSize::USIZE,
+            ),
+            DigestAlgorithm::Sha3_384 => (
+                Sha3_384::OID,
+                <Sha3_384 as OutputSizeUser>::OutputSize::USIZE,
+            ),
+            DigestAlgorithm::Sha3_512 => (
+                Sha3_512::OID,
+                <Sha3_512 as OutputSizeUser>::OutputSize::USIZE,
+            ),
         };
 
         let digest = hex::decode(&config.digest)
