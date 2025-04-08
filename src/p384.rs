@@ -78,6 +78,7 @@ impl KeyPair for P384KeyPair {
                 oid: const_oid::db::rfc5912::ECDSA_WITH_SHA_512,
                 parameters: None,
             },
+            d => return Err(miette::miette!("Unsupported digest algorithm: {:?}", d)),
         };
 
         Ok(alg_id)
@@ -107,6 +108,7 @@ impl KeyPair for P384KeyPair {
                 let digest = sha2::Sha512::digest(bytes);
                 signer.sign_prehash(&digest).into_diagnostic()?
             }
+            d => return Err(miette::miette!("Unsupported digest algorithm: {:?}", d)),
         };
 
         // ECDSA signatures in rfc5280 certificates are encoded per rfc5753.

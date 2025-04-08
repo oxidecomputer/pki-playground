@@ -115,6 +115,9 @@ pub enum DigestAlgorithm {
     Sha_256,
     Sha_384,
     Sha_512,
+    Sha3_256,
+    Sha3_384,
+    Sha3_512,
 }
 
 #[derive(knuffel::Decode, Debug)]
