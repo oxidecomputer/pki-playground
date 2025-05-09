@@ -211,7 +211,11 @@ fn main() -> Result<()> {
             let entities = load_entities(&doc.entities)?;
 
             for cert_config in &doc.certificates {
-                let subject_entity = entities.get(&cert_config.subject_entity).unwrap();
+                let subject_entity = entities.get(&cert_config.subject_entity).ok_or(miette!(
+                    "Subject entity for certificate {} does not exist: {}",
+                    &cert_config.name,
+                    &cert_config.subject_entity,
+                ))?;
                 let subject_kp = key_pairs.get(&cert_config.subject_key).unwrap();
 
                 let issuer_cert_pem =
