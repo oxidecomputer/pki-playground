@@ -169,7 +169,10 @@ fn main() -> Result<()> {
                 let public_key = SubjectPublicKeyInfo::from_der(subject_kp.to_spki()?.as_bytes())
                     .into_diagnostic()?;
 
-                let subject = entities.get(&csr_config.subject_entity).unwrap();
+                let subject = entities.get(&csr_config.subject_entity).ok_or(miette!(
+                    "Entity does not exist: {}",
+                    &csr_config.subject_entity
+                ))?;
                 let subject = subject.distinguished_name().clone();
 
                 let info = CertReqInfo {
