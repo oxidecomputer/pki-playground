@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use clap::{Parser, ValueEnum};
-use miette::{Context, IntoDiagnostic, Result};
+use miette::{miette, Context, IntoDiagnostic, Result};
 use pem_rfc7468::LineEnding;
 use pki_playground::{config, Entity, Extension, KeyPair};
 use spki::SubjectPublicKeyInfo;
@@ -162,7 +162,10 @@ fn main() -> Result<()> {
             let entities = load_entities(&doc.entities)?;
 
             for csr_config in &doc.certificate_requests {
-                let subject_kp = key_pairs.get(&csr_config.subject_key).unwrap();
+                let subject_kp = key_pairs.get(&csr_config.subject_key).ok_or(miette!(
+                    "Subject key does not exist: {}",
+                    &csr_config.subject_key
+                ))?;
                 let public_key = SubjectPublicKeyInfo::from_der(subject_kp.to_spki()?.as_bytes())
                     .into_diagnostic()?;
 
