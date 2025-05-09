@@ -216,7 +216,11 @@ fn main() -> Result<()> {
                     &cert_config.name,
                     &cert_config.subject_entity,
                 ))?;
-                let subject_kp = key_pairs.get(&cert_config.subject_key).unwrap();
+                let subject_kp = key_pairs.get(&cert_config.subject_key).ok_or(miette!(
+                    "Subject key pair for certificate {} does not exist: {}",
+                    &cert_config.name,
+                    &cert_config.subject_key,
+                ))?;
 
                 let issuer_cert_pem =
                     if let Some(issuer_cert_name) = &cert_config.issuer_certificate {
