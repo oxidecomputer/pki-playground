@@ -256,7 +256,10 @@ fn main() -> Result<()> {
                         .clone()
                 };
 
-                let issuer_kp = key_pairs.get(&cert_config.issuer_key).unwrap();
+                let issuer_kp = key_pairs.get(&cert_config.issuer_key).ok_or(miette!(
+                    "Issuer key does not exist: {}",
+                    &cert_config.issuer_key
+                ))?;
 
                 let not_after = DateTime::from_str(&cert_config.not_after).into_diagnostic()?;
                 let not_after = if not_after.year() >= 2050 {
