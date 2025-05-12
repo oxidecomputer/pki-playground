@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use clap::{Parser, ValueEnum};
-use miette::{Context, IntoDiagnostic, Result};
+use miette::{miette, Context, IntoDiagnostic, Result};
 use pem_rfc7468::LineEnding;
 use pki_playground::{config, Entity, Extension, KeyPair};
 use spki::SubjectPublicKeyInfo;
@@ -162,11 +162,17 @@ fn main() -> Result<()> {
             let entities = load_entities(&doc.entities)?;
 
             for csr_config in &doc.certificate_requests {
-                let subject_kp = key_pairs.get(&csr_config.subject_key).unwrap();
+                let subject_kp = key_pairs.get(&csr_config.subject_key).ok_or(miette!(
+                    "Subject key does not exist: {}",
+                    &csr_config.subject_key
+                ))?;
                 let public_key = SubjectPublicKeyInfo::from_der(subject_kp.to_spki()?.as_bytes())
                     .into_diagnostic()?;
 
-                let subject = entities.get(&csr_config.subject_entity).unwrap();
+                let subject = entities.get(&csr_config.subject_entity).ok_or(miette!(
+                    "Entity does not exist: {}",
+                    &csr_config.subject_entity
+                ))?;
                 let subject = subject.distinguished_name().clone();
 
                 let info = CertReqInfo {
@@ -205,8 +211,16 @@ fn main() -> Result<()> {
             let entities = load_entities(&doc.entities)?;
 
             for cert_config in &doc.certificates {
-                let subject_entity = entities.get(&cert_config.subject_entity).unwrap();
-                let subject_kp = key_pairs.get(&cert_config.subject_key).unwrap();
+                let subject_entity = entities.get(&cert_config.subject_entity).ok_or(miette!(
+                    "Subject entity for certificate {} does not exist: {}",
+                    &cert_config.name,
+                    &cert_config.subject_entity,
+                ))?;
+                let subject_kp = key_pairs.get(&cert_config.subject_key).ok_or(miette!(
+                    "Subject key pair for certificate {} does not exist: {}",
+                    &cert_config.name,
+                    &cert_config.subject_key,
+                ))?;
 
                 let issuer_cert_pem =
                     if let Some(issuer_cert_name) = &cert_config.issuer_certificate {
@@ -242,7 +256,10 @@ fn main() -> Result<()> {
                         .clone()
                 };
 
-                let issuer_kp = key_pairs.get(&cert_config.issuer_key).unwrap();
+                let issuer_kp = key_pairs.get(&cert_config.issuer_key).ok_or(miette!(
+                    "Issuer key does not exist: {}",
+                    &cert_config.issuer_key
+                ))?;
 
                 let not_after = DateTime::from_str(&cert_config.not_after).into_diagnostic()?;
                 let not_after = if not_after.year() >= 2050 {

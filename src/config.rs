@@ -425,5 +425,33 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
         }
     }
 
+    let mut csr_names: HashSet<&str> = HashSet::new();
+    for csr in &doc.certificate_requests {
+        if !csr_names.insert(&csr.name) {
+            miette::bail!(
+                "certificate requests must have unique names. \"{}\" is used more than once.",
+                csr.name
+            )
+        }
+    }
+
+    for csr in &doc.certificate_requests {
+        if !entity_names.contains(csr.subject_entity.as_str()) {
+            miette::bail!(
+                "certificate request \"{}\" subject entity \"{}\" does not exist",
+                csr.name,
+                csr.subject_key
+            )
+        }
+
+        if !kp_names.contains(csr.subject_key.as_str()) {
+            miette::bail!(
+                "certificate request \"{}\" subject key pair \"{}\" does not exist",
+                csr.name,
+                csr.subject_key
+            )
+        }
+    }
+
     Ok(doc)
 }
