@@ -130,6 +130,7 @@ pub enum X509Extensions {
     CertificatePolicies(CertificatePoliciesExtension),
     DiceTcbInfo(DiceTcbInfoExtension),
     SubjectAltName(SubjectAltNameExtension),
+    NameConstraints(NameConstraintsExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -346,6 +347,18 @@ pub struct SubjectAltNameExtension {
 
     #[knuffel(children)]
     pub names: Vec<GeneralName>,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct NameConstraintsExtension {
+    #[knuffel(property)]
+    pub critical: bool,
+
+    #[knuffel(child, unwrap(children))]
+    pub permitted: Option<Vec<GeneralName>>,
+
+    #[knuffel(child, unwrap(children))]
+    pub excluded: Option<Vec<GeneralName>>,
 }
 
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
