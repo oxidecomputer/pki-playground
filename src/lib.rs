@@ -17,7 +17,11 @@ use x509_cert::{
         asn1::{OctetString, PrintableStringRef, SetOfVec, Utf8StringRef},
         Decode as _, Encode as _,
     },
-    ext::pkix::{certpolicy::PolicyInformation, BasicConstraints, KeyUsage},
+    ext::pkix::{
+        certpolicy::PolicyInformation,
+        name::{GeneralName, GeneralNames},
+        BasicConstraints, KeyUsage, SubjectAltName,
+    },
     name::{Name, RdnSequence, RelativeDistinguishedName},
     Certificate, TbsCertificate,
 };
@@ -183,6 +187,9 @@ impl dyn Extension {
             }
             config::X509Extensions::DiceTcbInfo(c) => {
                 Ok(Box::new(DiceTcbInfoExtension::from_config(c)?))
+            }
+            config::X509Extensions::SubjectAltName(x) => {
+                Ok(Box::new(SubjectAltNameExtension::from_config(x)?))
             }
         }
     }
@@ -628,6 +635,49 @@ impl DiceTcbInfoExtension {
         Ok(DiceTcbInfoExtension {
             der,
             is_critical: config.critical,
+        })
+    }
+}
+
+pub struct SubjectAltNameExtension {
+    is_critical: bool,
+    der: Vec<u8>,
+}
+
+impl Extension for SubjectAltNameExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        SubjectAltName::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+impl SubjectAltNameExtension {
+    pub fn from_config(config: &config::SubjectAltNameExtension) -> Result<Self> {
+        use std::str::FromStr;
+
+        let mut names = GeneralNames::new();
+
+        for name in &config.names {
+            match name {
+                config::GeneralName::IpAddr(s) => {
+                    let addr = core::net::IpAddr::from_str(s).into_diagnostic()?;
+                    names.push(GeneralName::from(addr));
+                }
+            }
+        }
+
+        let der = SubjectAltName(names).to_der().into_diagnostic()?;
+
+        Ok(SubjectAltNameExtension {
+            is_critical: config.critical,
+            der,
         })
     }
 }

@@ -129,6 +129,7 @@ pub enum X509Extensions {
     ExtendedKeyUsage(ExtendedKeyUsageExtension),
     CertificatePolicies(CertificatePoliciesExtension),
     DiceTcbInfo(DiceTcbInfoExtension),
+    SubjectAltName(SubjectAltNameExtension),
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -331,6 +332,20 @@ pub struct CertificatePoliciesExtension {
 
     #[knuffel(children)]
     pub policies: Vec<CertificatePolicy>,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub enum GeneralName {
+    IpAddr(#[knuffel(argument)] String),
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct SubjectAltNameExtension {
+    #[knuffel(property)]
+    pub critical: bool,
+
+    #[knuffel(children)]
+    pub names: Vec<GeneralName>,
 }
 
 pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
