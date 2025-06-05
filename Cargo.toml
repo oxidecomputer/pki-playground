@@ -14,6 +14,7 @@ digest = "0.10.7"
 ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core", "std", "zeroize"] }
 flagset = "0.4.6"
 hex = "0.4.3"
+ipnet = "2.11.0"
 knuffel = "3.2.0"
 miette = { version = "5.10.0", features = ["fancy"] }
 p384 = "0.13.1"
