@@ -20,6 +20,9 @@ pub struct Document {
 
     #[knuffel(children(name = "certificate-request"))]
     pub certificate_requests: Vec<CertificateRequest>,
+
+    #[knuffel(children(name = "pki-path"))]
+    pub pki_paths: Vec<PkiPath>,
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -107,6 +110,15 @@ pub struct CertificateRequest {
     pub subject_key: String,
     #[knuffel(child, unwrap(argument))]
     pub digest_algorithm: Option<DigestAlgorithm>,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct PkiPath {
+    #[knuffel(argument)]
+    pub name: String,
+
+    #[knuffel(children(name = "cert"), unwrap(argument))]
+    pub certs: Vec<String>,
 }
 
 #[derive(knuffel::DecodeScalar, Debug)]
@@ -478,6 +490,14 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
                 csr.name,
                 csr.subject_key
             )
+        }
+    }
+
+    for pkipath in &doc.pki_paths {
+        for cert in &pkipath.certs {
+            if !cert_names.contains(cert.as_str()) {
+                miette::bail!("certificate \"{}\" does not exist", cert,)
+            }
         }
     }
 

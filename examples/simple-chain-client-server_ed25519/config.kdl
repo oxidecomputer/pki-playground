@@ -175,6 +175,10 @@ certificate "TEST USE ONLY - Test Server A" {
     serial-number "01"
 }
 
+pki-path "server-a-pki-path" {
+    cert "TEST USE ONLY - Test Server A"
+    cert "TEST USE ONLY - Test Int A"
+}
 
 certificate "TEST USE ONLY - Test Client A" {
     subject-entity "TEST USE ONLY - Test Client A"
