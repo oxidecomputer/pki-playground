@@ -175,6 +175,9 @@ certificate "TEST USE ONLY - Test Server A" {
     serial-number "01"
 }
 
+certificate-list "TEST USE ONLY - Test Server A" \
+    "TEST USE ONLY - Test Server A" \
+    "TEST USE ONLY - Test Int A"
 
 certificate "TEST USE ONLY - Test Client A" {
     subject-entity "TEST USE ONLY - Test Client A"
