@@ -46,6 +46,7 @@ enum Action {
     GenerateKeyPairs(GenerateKeyPairsOpts),
     GenerateCertificateRequests(GenerateCertificateRequestsOpts),
     GenerateCertificates(GenerateCertificatesOpts),
+    GenerateCertificateLists(GenerateCertificateListsOpts),
 }
 
 #[derive(clap::Args)]
@@ -64,6 +65,13 @@ struct GenerateCertificateRequestsOpts {
 
 #[derive(clap::Args)]
 struct GenerateCertificatesOpts {
+    /// action to take if an output file already exists
+    #[arg(long, default_value = "overwrite")]
+    output_exists: OutputFileExistsBehavior,
+}
+
+#[derive(clap::Args)]
+struct GenerateCertificateListsOpts {
     /// action to take if an output file already exists
     #[arg(long, default_value = "overwrite")]
     output_exists: OutputFileExistsBehavior,
@@ -131,6 +139,26 @@ fn load_entities(entities: &Vec<config::Entity>) -> Result<HashMap<String, Entit
     Ok(entity_map)
 }
 
+fn load_certificates(
+    certificates_cfg: &Vec<config::Certificate>,
+) -> Result<HashMap<String, x509_cert::Certificate>> {
+    let mut certs = HashMap::new();
+
+    for cert_cfg in certificates_cfg {
+        let cert_filename = format!("{}.cert.pem", cert_cfg.name);
+        let cert_pem = std::fs::read_to_string(&cert_filename)
+            .into_diagnostic()
+            .wrap_err(format!(
+                "Unable to load certificate \"{}\" from \"{}\"",
+                cert_cfg.name, &cert_filename
+            ))?;
+        let cert = x509_cert::Certificate::from_pem(cert_pem).into_diagnostic()?;
+        certs.insert(cert_cfg.name.clone(), cert);
+    }
+
+    Ok(certs)
+}
+
 fn main() -> Result<()> {
     let opts = Options::parse();
 
@@ -145,6 +173,25 @@ fn main() -> Result<()> {
     ))?;
 
     match opts.action {
+        Action::GenerateCertificateLists(action_opts) => {
+            let certificates = load_certificates(&doc.certificates)?;
+            for certlist_cfg in &doc.certificate_lists {
+                let mut cert_chain = String::new();
+                let certlist_filename = format!("{}.certlist.pem", certlist_cfg.name);
+                println!("Writing pki path to \"{}\"", &certlist_filename);
+                for cert_name in &certlist_cfg.certificates {
+                    let cert = certificates
+                        .get(cert_name)
+                        .ok_or(miette!("Certificate does not exist: {}", &certlist_cfg.name))?;
+                    cert_chain += &cert.to_pem(LineEnding::CRLF).into_diagnostic()?;
+                }
+                write_to_file(
+                    &certlist_filename,
+                    cert_chain.as_bytes(),
+                    action_opts.output_exists,
+                )?
+            }
+        }
         Action::GenerateKeyPairs(action_opts) => {
             for kp_config in &doc.key_pairs {
                 let kp = <dyn KeyPair>::new(kp_config)?;

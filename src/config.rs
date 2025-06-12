@@ -20,6 +20,9 @@ pub struct Document {
 
     #[knuffel(children(name = "certificate-request"))]
     pub certificate_requests: Vec<CertificateRequest>,
+
+    #[knuffel(children(name = "certificate-list"))]
+    pub certificate_lists: Vec<CertificateList>,
 }
 
 #[derive(knuffel::Decode, Debug)]
@@ -107,6 +110,15 @@ pub struct CertificateRequest {
     pub subject_key: String,
     #[knuffel(child, unwrap(argument))]
     pub digest_algorithm: Option<DigestAlgorithm>,
+}
+
+#[derive(knuffel::Decode, Debug)]
+pub struct CertificateList {
+    #[knuffel(argument)]
+    pub name: String,
+
+    #[knuffel(arguments)]
+    pub certificates: Vec<String>,
 }
 
 #[derive(knuffel::DecodeScalar, Debug)]
@@ -478,6 +490,14 @@ pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
                 csr.name,
                 csr.subject_key
             )
+        }
+    }
+
+    for certlist in &doc.certificate_lists {
+        for cert in &certlist.certificates {
+            if !cert_names.contains(cert.as_str()) {
+                miette::bail!("certificate \"{}\" does not exist", cert,)
+            }
         }
     }
 
