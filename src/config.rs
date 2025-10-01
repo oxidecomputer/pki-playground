@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::collections::HashSet;
-
+use camino::Utf8Path;
 use miette::{IntoDiagnostic, Result};
 use x509_cert::{ext::pkix::certpolicy::PolicyInformation, spki::ObjectIdentifier};
+
+use crate::ValidDocument;
 
 #[derive(knuffel::Decode, Debug)]
 pub struct Document {
@@ -25,7 +26,7 @@ pub struct Document {
     pub certificate_lists: Vec<CertificateList>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct KeyPair {
     #[knuffel(argument)]
     pub name: String,
@@ -33,14 +34,14 @@ pub struct KeyPair {
     pub key_type: Vec<KeyType>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub enum KeyType {
     Rsa(RsaKeyConfig),
     P384,
     Ed25519,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct RsaKeyConfig {
     #[knuffel(property, default = 2048)]
     pub num_bits: usize,
@@ -48,7 +49,7 @@ pub struct RsaKeyConfig {
     pub public_exponent: usize,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, Clone, PartialEq, Eq)]
 pub struct Entity {
     #[knuffel(argument)]
     pub name: String,
@@ -58,7 +59,7 @@ pub struct Entity {
     pub base_dn: Vec<EntityNameComponent>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, Clone, PartialEq, Eq)]
 pub enum EntityNameComponent {
     CountryName(#[knuffel(argument)] String),
     StateOrProvinceName(#[knuffel(argument)] String),
@@ -67,7 +68,7 @@ pub enum EntityNameComponent {
     OrganizationalUnitName(#[knuffel(argument)] String),
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct Certificate {
     #[knuffel(argument)]
     pub name: String,
@@ -99,7 +100,7 @@ pub struct Certificate {
     pub extensions: Option<Vec<X509Extensions>>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct CertificateRequest {
     #[knuffel(argument)]
     pub name: String,
@@ -112,7 +113,7 @@ pub struct CertificateRequest {
     pub digest_algorithm: Option<DigestAlgorithm>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct CertificateList {
     #[knuffel(argument)]
     pub name: String,
@@ -121,7 +122,7 @@ pub struct CertificateList {
     pub certificates: Vec<String>,
 }
 
-#[derive(knuffel::DecodeScalar, Debug)]
+#[derive(knuffel::DecodeScalar, Debug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum DigestAlgorithm {
     Sha_256,
@@ -132,7 +133,7 @@ pub enum DigestAlgorithm {
     Sha3_512,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub enum X509Extensions {
     BasicConstraints(BasicConstraintsExtension),
     KeyUsage(KeyUsageExtension),
@@ -145,7 +146,7 @@ pub enum X509Extensions {
     NameConstraints(NameConstraintsExtension),
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct BasicConstraintsExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -157,7 +158,7 @@ pub struct BasicConstraintsExtension {
     pub path_len: Option<u8>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct KeyUsageExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -190,7 +191,7 @@ pub struct KeyUsageExtension {
     pub decipher_only: bool,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct ExtendedKeyUsageExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -217,13 +218,13 @@ pub struct ExtendedKeyUsageExtension {
     pub oids: Vec<String>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct SubjectKeyIdentifierExtension {
     #[knuffel(property)]
     pub critical: bool,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct AuthorityKeyIdentifierExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -237,7 +238,7 @@ pub struct AuthorityKeyIdentifierExtension {
 
 /// The `CertificatePolicy` enum represents the set of KDL nodes that `pki-playground` can map to
 /// OIDs. Configs may also provide OIDs in their string forms using the `oid` node.
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub enum CertificatePolicy {
     /// Initial attestation policy OID from [DICE Certificate
     /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.3
@@ -273,7 +274,7 @@ pub enum CertificatePolicy {
     Oid(#[knuffel(argument)] String),
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct DiceTcbInfoExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -282,7 +283,7 @@ pub struct DiceTcbInfoExtension {
     pub fwid_list: Vec<Fwid>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct Fwid {
     #[knuffel(child, unwrap(argument))]
     pub digest_algorithm: DigestAlgorithm,
@@ -338,7 +339,7 @@ impl TryFrom<&CertificatePolicy> for PolicyInformation {
     }
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct CertificatePoliciesExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -347,12 +348,12 @@ pub struct CertificatePoliciesExtension {
     pub policies: Vec<CertificatePolicy>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub enum GeneralName {
     IpAddr(#[knuffel(argument)] String),
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct SubjectAltNameExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -361,7 +362,7 @@ pub struct SubjectAltNameExtension {
     pub names: Vec<GeneralName>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
 pub struct NameConstraintsExtension {
     #[knuffel(property)]
     pub critical: bool,
@@ -373,133 +374,8 @@ pub struct NameConstraintsExtension {
     pub excluded: Option<Vec<GeneralName>>,
 }
 
-pub fn load_and_validate(path: &std::path::Path) -> Result<Document> {
+pub fn load_and_validate(path: &Utf8Path) -> Result<ValidDocument> {
     let in_kdl = std::fs::read_to_string(path).into_diagnostic()?;
-    let doc: Document = knuffel::parse(&path.to_string_lossy(), &in_kdl)?;
-
-    let mut kp_names: HashSet<&str> = HashSet::new();
-    for kp in &doc.key_pairs {
-        if kp.key_type.len() != 1 {
-            miette::bail!(
-                "key pairs must have exactly one key type. key pair \"{}\" has {}.",
-                kp.name,
-                kp.key_type.len()
-            );
-        }
-        if !kp_names.insert(&kp.name) {
-            miette::bail!(
-                "key pairs must have unique names. \"{}\" is used more than once.",
-                kp.name
-            )
-        }
-    }
-
-    let mut entity_names: HashSet<&str> = HashSet::new();
-    for entity in &doc.entities {
-        if !entity_names.insert(&entity.name) {
-            miette::bail!(
-                "entities must have unique names. \"{}\" is used more than once.",
-                entity.name
-            )
-        }
-    }
-
-    // Certificates can name other certificates as their issuer so need to
-    // gather all the names before checking validity.
-    let mut cert_names: HashSet<&str> = HashSet::new();
-    for cert in &doc.certificates {
-        if !cert_names.insert(&cert.name) {
-            miette::bail!(
-                "certificates must have unique names. \"{}\" is used more than once.",
-                cert.name
-            )
-        }
-    }
-
-    for cert in &doc.certificates {
-        if !entity_names.contains(cert.subject_entity.as_str()) {
-            miette::bail!(
-                "certificate \"{}\" subject entity \"{}\" does not exist",
-                cert.name,
-                cert.subject_key
-            )
-        }
-
-        if !kp_names.contains(cert.subject_key.as_str()) {
-            miette::bail!(
-                "certificate \"{}\" subject key pair \"{}\" does not exist",
-                cert.name,
-                cert.subject_key
-            )
-        }
-
-        match (&cert.issuer_entity, &cert.issuer_certificate) {
-            (None, None) => miette::bail!("certificate \"{}\" must specify either an issuer entity or certificate", cert.name),
-            (Some(_), Some(_)) => miette::bail!("certificate \"{}\" specifies both an issuer entity and certificate.  Only one may be specified.", cert.name),
-            (Some(entity), None) => {
-                if !entity_names.contains(entity.as_str()) {
-                    miette::bail!(
-                        "certificate \"{}\" issuer entity \"{}\" does not exist",
-                        cert.name,
-                        cert.issuer_key
-                    )
-                }
-            }
-            (None, Some(cert_name)) => {
-                if !cert_names.contains(cert_name.as_str()) {
-                    miette::bail!(
-                        "certificate \"{}\" issuer certificate \"{}\" does not exist",
-                        cert.name,
-                        cert.issuer_key
-                    )
-                }
-            }
-        }
-
-        if !kp_names.contains(cert.issuer_key.as_str()) {
-            miette::bail!(
-                "certificate \"{}\" issuer key pair \"{}\" does not exist",
-                cert.name,
-                cert.issuer_key
-            )
-        }
-    }
-
-    let mut csr_names: HashSet<&str> = HashSet::new();
-    for csr in &doc.certificate_requests {
-        if !csr_names.insert(&csr.name) {
-            miette::bail!(
-                "certificate requests must have unique names. \"{}\" is used more than once.",
-                csr.name
-            )
-        }
-    }
-
-    for csr in &doc.certificate_requests {
-        if !entity_names.contains(csr.subject_entity.as_str()) {
-            miette::bail!(
-                "certificate request \"{}\" subject entity \"{}\" does not exist",
-                csr.name,
-                csr.subject_key
-            )
-        }
-
-        if !kp_names.contains(csr.subject_key.as_str()) {
-            miette::bail!(
-                "certificate request \"{}\" subject key pair \"{}\" does not exist",
-                csr.name,
-                csr.subject_key
-            )
-        }
-    }
-
-    for certlist in &doc.certificate_lists {
-        for cert in &certlist.certificates {
-            if !cert_names.contains(cert.as_str()) {
-                miette::bail!("certificate \"{}\" does not exist", cert,)
-            }
-        }
-    }
-
-    Ok(doc)
+    let doc: Document = knuffel::parse(path.as_str(), &in_kdl)?;
+    ValidDocument::validate(doc)
 }

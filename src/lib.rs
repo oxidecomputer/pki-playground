@@ -35,11 +35,15 @@ pub mod config;
 pub mod ed25519;
 pub mod p384;
 pub mod rsa;
+pub mod sprockets;
+mod valid_document;
 
 use crate::config::DigestAlgorithm;
 use crate::p384::P384KeyPair;
 use crate::rsa::RsaKeyPair;
 use ed25519::Ed25519KeyPair;
+pub use valid_document::OutputFileExistsBehavior;
+pub(crate) use valid_document::ValidDocument;
 
 pub trait KeyPair {
     fn name(&self) -> &str;
