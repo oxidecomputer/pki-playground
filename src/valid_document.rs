@@ -158,13 +158,16 @@ impl ValidDocument {
 
             let issuer_cert_pem = if let Some(issuer_cert_name) = &cert_config.issuer_certificate {
                 let issuer_cert_filename = format!("{}.cert.pem", issuer_cert_name);
+                let path = dir.join(&issuer_cert_filename);
+
                 let mut issuer_cert_pem = Vec::new();
-                let mut issuer_cert_file = std::fs::File::open(&issuer_cert_filename)
-                    .into_diagnostic()
-                    .wrap_err(format!(
-                        "Unable to load issuer certificate \"{}\" from file \"{}\"",
-                        issuer_cert_name, issuer_cert_filename
-                    ))?;
+                let mut issuer_cert_file =
+                    std::fs::File::open(&path)
+                        .into_diagnostic()
+                        .wrap_err(format!(
+                            "Unable to load issuer certificate \"{}\" from file \"{}\"",
+                            issuer_cert_name, path
+                        ))?;
                 issuer_cert_file
                     .read_to_end(&mut issuer_cert_pem)
                     .into_diagnostic()?;
