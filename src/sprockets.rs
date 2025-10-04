@@ -4,6 +4,8 @@
 
 //! Convenience mechanisms for generating trust quorum cert chains for testing
 
+use camino::Utf8PathBuf;
+
 use crate::{
     config::{
         AuthorityKeyIdentifierExtension, BasicConstraintsExtension, Certificate, CertificateList,
@@ -15,7 +17,7 @@ use crate::{
 };
 
 fn test_root() -> (KeyPair, Entity, Certificate) {
-    let name = "test-root-a".to_string();
+    let name = root_prefix();
     (
         KeyPair {
             name: name.clone(),
@@ -77,7 +79,7 @@ fn test_root() -> (KeyPair, Entity, Certificate) {
 
 fn test_signer() -> (KeyPair, Entity, Certificate) {
     let name = "test-signer-a1".to_string();
-    let issuer = "test-root-a".to_string();
+    let issuer = root_prefix();
     (
         KeyPair {
             name: name.clone(),
@@ -152,7 +154,7 @@ fn test_platformid(n: usize) -> (KeyPair, Entity, Certificate) {
         },
         Entity {
             name: name.clone(),
-            common_name: format!("PDV2:PPP-PPPPPPP:RRR:{n}"),
+            common_name: platform_id(n),
             base_dn: vec![
                 EntityNameComponent::CountryName("US".into()),
                 EntityNameComponent::OrganizationName("Oxide Computer Company".into()),
@@ -279,7 +281,7 @@ fn test_deviceid(n: usize) -> (KeyPair, Entity, Certificate) {
 }
 
 fn test_sprockets_auth(n: usize) -> (KeyPair, Entity, Certificate) {
-    let name = format!("test-sprockets-auth-{n}");
+    let name = sprockets_auth_prefix(n);
     let issuer = format!("test-deviceid-{n}");
     (
         KeyPair {
@@ -360,7 +362,7 @@ fn test_sprockets_auth_certificate_list(n: usize) -> CertificateList {
 }
 
 fn test_alias(n: usize) -> (KeyPair, Entity, Certificate) {
-    let name = format!("test-alias-{n}");
+    let name = alias_prefix(n);
     let issuer = format!("test-deviceid-{n}");
     (
         KeyPair {
@@ -423,7 +425,7 @@ fn test_alias(n: usize) -> (KeyPair, Entity, Certificate) {
 }
 
 fn test_alias_certificate_list(n: usize) -> CertificateList {
-    let name = format!("test-alias-{n}");
+    let name = alias_prefix(n);
     CertificateList {
         name: name.clone(),
         certificates: vec![
@@ -472,6 +474,39 @@ pub fn generate_config(num_nodes: usize) -> ValidDocument {
     }
 
     ValidDocument::validate(doc).expect("validation succeeds")
+}
+
+/// Return the platform id string associated with the `nth` sprockets
+/// configuration
+pub fn platform_id(n: usize) -> String {
+    format!("PDV2:PPP-PPPPPPP:RRR:{n}")
+}
+
+pub fn sprockets_auth_prefix(n: usize) -> String {
+    format!("test-sprockets-auth-{n}")
+}
+
+pub fn alias_prefix(n: usize) -> String {
+    format!("test-alias-{n}")
+}
+
+pub fn root_prefix() -> String {
+    "test-root-a".to_string()
+}
+
+pub fn private_key_path(dir: Utf8PathBuf, prefix: &str) -> Utf8PathBuf {
+    let filename = format!("{prefix}.key.pem");
+    dir.join(filename)
+}
+
+pub fn cert_path(dir: Utf8PathBuf, prefix: &str) -> Utf8PathBuf {
+    let filename = format!("{prefix}.cert.pem");
+    dir.join(filename)
+}
+
+pub fn certlist_path(dir: Utf8PathBuf, prefix: &str) -> Utf8PathBuf {
+    let filename = format!("{prefix}.certlist.pem");
+    dir.join(filename)
 }
 
 #[cfg(test)]

@@ -42,8 +42,7 @@ use crate::config::DigestAlgorithm;
 use crate::p384::P384KeyPair;
 use crate::rsa::RsaKeyPair;
 use ed25519::Ed25519KeyPair;
-pub use valid_document::OutputFileExistsBehavior;
-pub(crate) use valid_document::ValidDocument;
+pub use valid_document::{OutputFileExistsBehavior, ValidDocument};
 
 pub trait KeyPair {
     fn name(&self) -> &str;
