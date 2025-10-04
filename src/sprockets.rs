@@ -479,7 +479,7 @@ pub fn generate_config(num_nodes: usize) -> ValidDocument {
 /// Return the platform id string associated with the `nth` sprockets
 /// configuration
 pub fn platform_id(n: usize) -> String {
-    format!("PDV2:PPP-PPPPPPP:RRR:{n}")
+    format!("PDV2:PPP-PPPPPPP:RRR:{n:011}")
 }
 
 pub fn sprockets_auth_prefix(n: usize) -> String {

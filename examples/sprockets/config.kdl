@@ -85,7 +85,7 @@ key-pair "test-platformid-1" {
 entity "test-platformid-1" {
     country-name "US"
     organization-name "Oxide Computer Company"
-    common-name "PDV2:PPP-PPPPPPP:RRR:1"
+    common-name "PDV2:PPP-PPPPPPP:RRR:00000000001"
 }
 
 certificate "test-platformid-1" {
@@ -261,7 +261,7 @@ key-pair "test-platformid-2" {
 entity "test-platformid-2" {
     country-name "US"
     organization-name "Oxide Computer Company"
-    common-name "PDV2:PPP-PPPPPPP:RRR:2"
+    common-name "PDV2:PPP-PPPPPPP:RRR:00000000002"
 }
 
 certificate "test-platformid-2" {
