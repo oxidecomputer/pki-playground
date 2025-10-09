@@ -35,7 +35,6 @@ pub mod config;
 pub mod ed25519;
 pub mod p384;
 pub mod rsa;
-pub mod sprockets;
 mod valid_document;
 
 use crate::config::DigestAlgorithm;

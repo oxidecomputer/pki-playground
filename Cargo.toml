@@ -7,7 +7,7 @@ license = "MPL-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-camino = { version = "1.2.0", features = ["serde1"] }
+camino = { version = "1.2.0" }
 clap = { version = "4.5.31", features = ["derive"] }
 const-oid = { version = "0.9.6", features = ["db"] }
 der = { version = "0.7.9", features = ["std"] }
@@ -32,4 +32,4 @@ x509-cert = "0.2.5"
 zeroize = "1.8.1"
 
 [dev-dependencies]
-pretty_assertions = "1.4.1" 
+pretty_assertions = "1.4.1"
