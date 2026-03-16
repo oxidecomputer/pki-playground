@@ -12,6 +12,9 @@ struct Options {
     #[arg(short, long, value_name = "FILE")]
     config: Option<Utf8PathBuf>,
 
+    #[arg(short, long, value_name = "OUTDIR", default_value = ".")]
+    out_dir: Utf8PathBuf,
+
     #[command(subcommand)]
     action: Action,
 }
@@ -64,7 +67,7 @@ fn main() -> Result<()> {
     let doc = pki_playground::config::load_and_validate(&config_path)
         .wrap_err(format!("Loading config from \"{}\" failed", config_path))?;
 
-    let dir = ".".into();
+    let dir = opts.out_dir;
 
     match opts.action {
         Action::GenerateCertificateLists(action_opts) => {
