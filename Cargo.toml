@@ -21,7 +21,7 @@ miette = { version = "5.10.0", features = ["fancy"] }
 p384 = "0.13.1"
 pem-rfc7468 = "0.7"
 pkcs8 = { version = "0.10.2", features = ["pem"] }
-rand = "0.8.5"
+rand = "0.8.6"
 rsa = { version = "0.9.10", features = ["sha2"] }
 sha1 = "0.10.6"
 sha2 = { version = "0.10.9", features = ["oid"] }
