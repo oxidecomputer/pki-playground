@@ -13,7 +13,7 @@ const-oid = { version = "0.9.6", features = ["db"] }
 der = { version = "0.7.9", features = ["std"] }
 digest = "0.10.7"
 ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core", "std", "zeroize"] }
-flagset = "0.4.6"
+flagset = "0.4.7"
 hex = "0.4.3"
 ipnet = "2.11.0"
 knus = "3.4.0"
