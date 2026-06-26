@@ -28,7 +28,7 @@ use crate::config;
 
 /// An identical structure to `Document` that has already been validated.
 ///
-/// Importantly, this type does not derive knuffel types, because it
+/// Importantly, this type does not derive knus types, because it
 /// isn't ever read from the KDL directly. It can only be created by the
 /// `validate_document` function.
 ///
