@@ -8,121 +8,121 @@ use x509_cert::{ext::pkix::certpolicy::PolicyInformation, spki::ObjectIdentifier
 
 use crate::ValidDocument;
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct Document {
-    #[knuffel(children(name = "key-pair"))]
+    #[knus(children(name = "key-pair"))]
     pub key_pairs: Vec<KeyPair>,
 
-    #[knuffel(children(name = "entity"))]
+    #[knus(children(name = "entity"))]
     pub entities: Vec<Entity>,
 
-    #[knuffel(children(name = "certificate"))]
+    #[knus(children(name = "certificate"))]
     pub certificates: Vec<Certificate>,
 
-    #[knuffel(children(name = "certificate-request"))]
+    #[knus(children(name = "certificate-request"))]
     pub certificate_requests: Vec<CertificateRequest>,
 
-    #[knuffel(children(name = "certificate-list"))]
+    #[knus(children(name = "certificate-list"))]
     pub certificate_lists: Vec<CertificateList>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct KeyPair {
-    #[knuffel(argument)]
+    #[knus(argument)]
     pub name: String,
-    #[knuffel(children)]
+    #[knus(children)]
     pub key_type: Vec<KeyType>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub enum KeyType {
     Rsa(RsaKeyConfig),
     P384,
     Ed25519,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct RsaKeyConfig {
-    #[knuffel(property, default = 2048)]
+    #[knus(property, default = 2048)]
     pub num_bits: usize,
-    #[knuffel(property, default = 65537)]
+    #[knus(property, default = 65537)]
     pub public_exponent: usize,
 }
 
-#[derive(knuffel::Decode, Debug, Clone, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, Clone, PartialEq, Eq)]
 pub struct Entity {
-    #[knuffel(argument)]
+    #[knus(argument)]
     pub name: String,
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub common_name: String,
-    #[knuffel(children)]
+    #[knus(children)]
     pub base_dn: Vec<EntityNameComponent>,
 }
 
-#[derive(knuffel::Decode, Debug, Clone, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, Clone, PartialEq, Eq)]
 pub enum EntityNameComponent {
-    CountryName(#[knuffel(argument)] String),
-    StateOrProvinceName(#[knuffel(argument)] String),
-    LocalityName(#[knuffel(argument)] String),
-    OrganizationName(#[knuffel(argument)] String),
-    OrganizationalUnitName(#[knuffel(argument)] String),
+    CountryName(#[knus(argument)] String),
+    StateOrProvinceName(#[knus(argument)] String),
+    LocalityName(#[knus(argument)] String),
+    OrganizationName(#[knus(argument)] String),
+    OrganizationalUnitName(#[knus(argument)] String),
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct Certificate {
-    #[knuffel(argument)]
+    #[knus(argument)]
     pub name: String,
 
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub subject_entity: String,
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub subject_key: String,
 
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub issuer_entity: Option<String>,
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub issuer_certificate: Option<String>,
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub issuer_key: String,
 
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub digest_algorithm: Option<DigestAlgorithm>,
 
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub not_before: Option<String>,
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub not_after: String,
 
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub serial_number: String,
 
-    #[knuffel(child, unwrap(children))]
+    #[knus(child, unwrap(children))]
     pub extensions: Option<Vec<X509Extensions>>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct CertificateRequest {
-    #[knuffel(argument)]
+    #[knus(argument)]
     pub name: String,
 
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub subject_entity: String,
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub subject_key: String,
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub digest_algorithm: Option<DigestAlgorithm>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct CertificateList {
-    #[knuffel(argument)]
+    #[knus(argument)]
     pub name: String,
 
-    #[knuffel(arguments)]
+    #[knus(arguments)]
     pub certificates: Vec<String>,
 }
 
-#[derive(knuffel::DecodeScalar, Debug, PartialEq, Eq)]
+#[derive(knus::DecodeScalar, Debug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum DigestAlgorithm {
     Sha_256,
@@ -133,7 +133,7 @@ pub enum DigestAlgorithm {
     Sha3_512,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub enum X509Extensions {
     BasicConstraints(BasicConstraintsExtension),
     KeyUsage(KeyUsageExtension),
@@ -146,99 +146,99 @@ pub enum X509Extensions {
     NameConstraints(NameConstraintsExtension),
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct BasicConstraintsExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(property)]
+    #[knus(property)]
     pub ca: bool,
 
-    #[knuffel(property)]
+    #[knus(property)]
     pub path_len: Option<u8>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct KeyUsageExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub digital_signature: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub non_repudiation: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub key_encipherment: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub data_encipherment: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub key_agreement: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub key_cert_sign: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub crl_sign: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub encipher_only: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub decipher_only: bool,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct ExtendedKeyUsageExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub id_kp_server_auth: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub id_kp_client_auth: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub id_kp_code_signing: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub id_kp_email_protection: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub id_kp_time_stamping: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub id_kp_ocspsigning: bool,
 
-    #[knuffel(children(name = "oid"), unwrap(argument))]
+    #[knus(children(name = "oid"), unwrap(argument))]
     pub oids: Vec<String>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct SubjectKeyIdentifierExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct AuthorityKeyIdentifierExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub key_id: bool,
 
-    #[knuffel(child)]
+    #[knus(child)]
     pub issuer: bool,
 }
 
 /// The `CertificatePolicy` enum represents the set of KDL nodes that `pki-playground` can map to
 /// OIDs. Configs may also provide OIDs in their string forms using the `oid` node.
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub enum CertificatePolicy {
     /// Initial attestation policy OID from [DICE Certificate
     /// Profiles](https://trustedcomputinggroup.org/resource/dice-certificate-profiles/) §5.1.5.3
@@ -271,24 +271,24 @@ pub enum CertificatePolicy {
     /// terms](https://github.com/oxidecomputer/oana#asn1-object-identifiers)
     OanaRotCodeSigningRelease,
     /// `oid` node taking an OID string argument
-    Oid(#[knuffel(argument)] String),
+    Oid(#[knus(argument)] String),
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct DiceTcbInfoExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(child, unwrap(children(name = "fwid")))]
+    #[knus(child, unwrap(children(name = "fwid")))]
     pub fwid_list: Vec<Fwid>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct Fwid {
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub digest_algorithm: DigestAlgorithm,
 
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub digest: String,
 }
 
@@ -339,43 +339,43 @@ impl TryFrom<&CertificatePolicy> for PolicyInformation {
     }
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct CertificatePoliciesExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(children)]
+    #[knus(children)]
     pub policies: Vec<CertificatePolicy>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub enum GeneralName {
-    IpAddr(#[knuffel(argument)] String),
+    IpAddr(#[knus(argument)] String),
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct SubjectAltNameExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(children)]
+    #[knus(children)]
     pub names: Vec<GeneralName>,
 }
 
-#[derive(knuffel::Decode, Debug, PartialEq, Eq)]
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct NameConstraintsExtension {
-    #[knuffel(property)]
+    #[knus(property)]
     pub critical: bool,
 
-    #[knuffel(child, unwrap(children))]
+    #[knus(child, unwrap(children))]
     pub permitted: Option<Vec<GeneralName>>,
 
-    #[knuffel(child, unwrap(children))]
+    #[knus(child, unwrap(children))]
     pub excluded: Option<Vec<GeneralName>>,
 }
 
 pub fn load_and_validate(path: &Utf8Path) -> Result<ValidDocument> {
     let in_kdl = std::fs::read_to_string(path).into_diagnostic()?;
-    let doc: Document = knuffel::parse(path.as_str(), &in_kdl)?;
+    let doc: Document = knus::parse(path.as_str(), &in_kdl)?;
     ValidDocument::validate(doc)
 }

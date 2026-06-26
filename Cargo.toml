@@ -16,8 +16,8 @@ ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core", "std", "zer
 flagset = "0.4.6"
 hex = "0.4.3"
 ipnet = "2.11.0"
-knuffel = "3.2.0"
-miette = { version = "5.10.0", features = ["fancy"] }
+knus = "3.4.0"
+miette = { version = "7.6.0", features = ["fancy"] }
 p384 = "0.13.1"
 pem-rfc7468 = "0.7"
 pkcs8 = { version = "0.10.2", features = ["pem"] }
