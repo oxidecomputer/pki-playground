@@ -8,7 +8,7 @@ license = "MPL-2.0"
 
 [dependencies]
 camino = { version = "1.2.0" }
-clap = { version = "4.5.31", features = ["derive"] }
+clap = { version = "4.6.1", features = ["derive"] }
 const-oid = { version = "0.9.6", features = ["db"] }
 der = { version = "0.7.9", features = ["std"] }
 digest = "0.10.7"
