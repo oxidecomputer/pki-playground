@@ -12,7 +12,7 @@ clap = { version = "4.6.1", features = ["derive"] }
 const-oid = { version = "0.9.6", features = ["db"] }
 der = { version = "0.7.9", features = ["std"] }
 digest = "0.10.7"
-ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core", "std", "zeroize"] }
+ed25519-dalek = { version = "2.2.0", features = ["pem", "rand_core", "std", "zeroize"] }
 flagset = "0.4.7"
 hex = "0.4.3"
 ipnet = "2.12.0"
