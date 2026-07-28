@@ -71,16 +71,16 @@ fn main() -> Result<()> {
 
     match opts.action {
         Action::GenerateCertificateLists(action_opts) => {
-            doc.write_certificate_lists(dir, action_opts.output_exists)
+            doc.write_certificate_lists(&dir, action_opts.output_exists)
         }
         Action::GenerateKeyPairs(action_opts) => {
-            doc.write_key_pairs(dir, action_opts.output_exists)
+            doc.write_key_pairs(&dir, action_opts.output_exists)
         }
         Action::GenerateCertificateRequests(action_opts) => {
-            doc.write_certificate_requests(dir, action_opts.output_exists)
+            doc.write_certificate_requests(&dir, action_opts.output_exists)
         }
         Action::GenerateCertificates(action_opts) => {
-            doc.write_certificates(dir, action_opts.output_exists)
+            doc.write_certificates(&dir, action_opts.output_exists)
         }
     }
 }

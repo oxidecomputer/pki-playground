@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::{Entity, Extension, KeyPair};
-use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use miette::{miette, Context, IntoDiagnostic, Result};
 use pem_rfc7468::LineEnding;
@@ -11,6 +10,7 @@ use spki::SubjectPublicKeyInfo;
 use std::collections::{HashMap, HashSet};
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
+use std::path::Path;
 use std::str::FromStr;
 use std::time::SystemTime;
 use x509_cert::{
@@ -45,28 +45,32 @@ pub struct ValidDocument {
 }
 
 impl ValidDocument {
-    pub fn write_key_pairs(&self, dir: Utf8PathBuf, opts: OutputFileExistsBehavior) -> Result<()> {
+    pub fn write_key_pairs<P: AsRef<Path>>(
+        &self,
+        dir: P,
+        opts: OutputFileExistsBehavior,
+    ) -> Result<()> {
         for kp_config in &self.key_pairs {
             let kp = <dyn KeyPair>::new(kp_config)?;
             let kp_filename = format!("{}.key.pem", kp_config.name);
-            let path = dir.join(&kp_filename);
-            println!("Writing key pair to \"{}\"", &path);
+            let path = dir.as_ref().join(&kp_filename);
+            println!("Writing key pair to \"{}\"", path.display());
             write_to_file(&path, kp.to_pkcs8_pem()?.as_bytes(), opts)?
         }
         Ok(())
     }
 
-    pub fn write_certificate_lists(
+    pub fn write_certificate_lists<P: AsRef<Path>>(
         &self,
-        dir: Utf8PathBuf,
+        dir: P,
         opts: OutputFileExistsBehavior,
     ) -> Result<()> {
-        let certificates = self.load_certificates(dir.clone())?;
+        let certificates = self.load_certificates(&dir)?;
         for certlist_cfg in &self.certificate_lists {
             let mut cert_chain = String::new();
             let certlist_filename = format!("{}.certlist.pem", certlist_cfg.name);
-            let path = dir.join(&certlist_filename);
-            println!("Writing pki path to \"{}\"", &path);
+            let path = dir.as_ref().join(&certlist_filename);
+            println!("Writing pki path to \"{}\"", path.display());
             for cert_name in &certlist_cfg.certificates {
                 let cert = certificates.get(cert_name).ok_or(miette!(
                     "Certificate does not exist: {}",
@@ -79,12 +83,12 @@ impl ValidDocument {
         Ok(())
     }
 
-    pub fn write_certificate_requests(
+    pub fn write_certificate_requests<P: AsRef<Path>>(
         &self,
-        dir: Utf8PathBuf,
+        dir: P,
         opts: OutputFileExistsBehavior,
     ) -> Result<()> {
-        let key_pairs = self.load_keypairs(dir.clone())?;
+        let key_pairs = self.load_keypairs(&dir)?;
         let entities = self.load_entities()?;
 
         for csr_config in &self.certificate_requests {
@@ -124,8 +128,8 @@ impl ValidDocument {
             };
 
             let csr_filename = format!("{}.csr.pem", csr_config.name);
-            let path = dir.join(&csr_filename);
-            println!("Writing certificate request to \"{}\"", &path);
+            let path = dir.as_ref().join(&csr_filename);
+            println!("Writing certificate request to \"{}\"", path.display());
             write_to_file(
                 &path,
                 csr.to_pem(LineEnding::CRLF).into_diagnostic()?.as_bytes(),
@@ -136,12 +140,12 @@ impl ValidDocument {
         Ok(())
     }
 
-    pub fn write_certificates(
+    pub fn write_certificates<P: AsRef<Path>>(
         &self,
-        dir: Utf8PathBuf,
+        dir: P,
         opts: OutputFileExistsBehavior,
     ) -> Result<()> {
-        let key_pairs = self.load_keypairs(dir.clone())?;
+        let key_pairs = self.load_keypairs(&dir)?;
         let entities = self.load_entities()?;
 
         for cert_config in &self.certificates {
@@ -158,7 +162,7 @@ impl ValidDocument {
 
             let issuer_cert_pem = if let Some(issuer_cert_name) = &cert_config.issuer_certificate {
                 let issuer_cert_filename = format!("{}.cert.pem", issuer_cert_name);
-                let path = dir.join(&issuer_cert_filename);
+                let path = dir.as_ref().join(&issuer_cert_filename);
 
                 let mut issuer_cert_pem = Vec::new();
                 let mut issuer_cert_file =
@@ -166,7 +170,8 @@ impl ValidDocument {
                         .into_diagnostic()
                         .wrap_err(format!(
                             "Unable to load issuer certificate \"{}\" from file \"{}\"",
-                            issuer_cert_name, path
+                            issuer_cert_name,
+                            path.display()
                         ))?;
                 issuer_cert_file
                     .read_to_end(&mut issuer_cert_pem)
@@ -287,8 +292,8 @@ impl ValidDocument {
             };
 
             let cert_filename = format!("{}.cert.pem", cert_config.name);
-            let path = dir.join(&cert_filename);
-            println!("Writing certificate to \"{}\"", &path);
+            let path = dir.as_ref().join(&cert_filename);
+            println!("Writing certificate to \"{}\"", path.display());
             write_to_file(
                 &path,
                 cert.to_pem(LineEnding::CRLF).into_diagnostic()?.as_bytes(),
@@ -299,17 +304,18 @@ impl ValidDocument {
         Ok(())
     }
 
-    fn load_keypairs(&self, dir: Utf8PathBuf) -> Result<HashMap<String, Box<dyn KeyPair>>> {
+    fn load_keypairs<P: AsRef<Path>>(&self, dir: P) -> Result<HashMap<String, Box<dyn KeyPair>>> {
         let mut key_pairs = HashMap::new();
 
         for kp_config in &self.key_pairs {
             let kp_filename = format!("{}.key.pem", kp_config.name);
-            let path = dir.join(&kp_filename);
+            let path = dir.as_ref().join(&kp_filename);
             let kp_pem = std::fs::read_to_string(&path)
                 .into_diagnostic()
                 .wrap_err(format!(
                     "Unable to load key pair \"{}\" from \"{}\"",
-                    kp_config.name, &path
+                    kp_config.name,
+                    path.display()
                 ))?;
             let kp = <dyn KeyPair>::from_pem(kp_config, &kp_pem)?;
             key_pairs.insert(String::from(kp.name()), kp);
@@ -318,20 +324,21 @@ impl ValidDocument {
         Ok(key_pairs)
     }
 
-    fn load_certificates(
+    fn load_certificates<P: AsRef<Path>>(
         &self,
-        dir: Utf8PathBuf,
+        dir: P,
     ) -> Result<HashMap<String, x509_cert::Certificate>> {
         let mut certs = HashMap::new();
 
         for cert_cfg in &self.certificates {
             let cert_filename = format!("{}.cert.pem", cert_cfg.name);
-            let path = dir.join(&cert_filename);
+            let path = dir.as_ref().join(&cert_filename);
             let cert_pem = std::fs::read_to_string(&path)
                 .into_diagnostic()
                 .wrap_err(format!(
                     "Unable to load certificate \"{}\" from \"{}\"",
-                    cert_cfg.name, &path
+                    cert_cfg.name,
+                    path.display()
                 ))?;
             let cert = x509_cert::Certificate::from_pem(cert_pem).into_diagnostic()?;
             certs.insert(cert_cfg.name.clone(), cert);
@@ -501,8 +508,8 @@ pub enum OutputFileExistsBehavior {
     Overwrite,
 }
 
-pub fn write_to_file(
-    path: &Utf8PathBuf,
+pub fn write_to_file<P: AsRef<Path>>(
+    path: P,
     contents: &[u8],
     exists_behavior: OutputFileExistsBehavior,
 ) -> Result<()> {
@@ -515,19 +522,24 @@ pub fn write_to_file(
         OutputFileExistsBehavior::Overwrite => open_opts.create(true).truncate(true),
     };
 
-    let mut file = match open_opts.open(path) {
+    let mut file = match open_opts.open(&path) {
         Err(e)
             if e.kind() == std::io::ErrorKind::AlreadyExists
                 && exists_behavior == OutputFileExistsBehavior::Skip =>
         {
-            println!("File \"{}\" already exists, skipping", path);
+            println!(
+                "File \"{}\" already exists, skipping",
+                path.as_ref().display()
+            );
             return Ok(());
         }
-        x => x
-            .into_diagnostic()
-            .wrap_err(format!("Unable to open file \"{}\" for writing", path))?,
+        x => x.into_diagnostic().wrap_err(format!(
+            "Unable to open file \"{}\" for writing",
+            path.as_ref().display()
+        ))?,
     };
-    file.write_all(contents)
-        .into_diagnostic()
-        .wrap_err(format!("Unable to write to file \"{}\"", path))
+    file.write_all(contents).into_diagnostic().wrap_err(format!(
+        "Unable to write to file \"{}\"",
+        path.as_ref().display()
+    ))
 }
