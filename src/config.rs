@@ -142,6 +142,7 @@ pub enum X509Extensions {
     ExtendedKeyUsage(ExtendedKeyUsageExtension),
     CertificatePolicies(CertificatePoliciesExtension),
     DiceTcbInfo(DiceTcbInfoExtension),
+    DiceTcbInfoAmd(DiceTcbInfoAmdExtension),
     SubjectAltName(SubjectAltNameExtension),
     NameConstraints(NameConstraintsExtension),
 }
@@ -284,12 +285,66 @@ pub struct DiceTcbInfoExtension {
 }
 
 #[derive(knus::Decode, Debug, PartialEq, Eq)]
+pub struct DiceTcbInfoAmdExtension {
+    #[knus(property)]
+    pub critical: bool,
+
+    #[knus(child, unwrap(argument))]
+    pub vendor: Option<String>,
+
+    #[knus(child, unwrap(argument))]
+    pub model: Option<String>,
+
+    #[knus(child, unwrap(argument))]
+    pub layer: Option<i8>,
+
+    #[knus(child, unwrap(argument))]
+    pub index: Option<i8>,
+
+    #[knus(child, unwrap(children(name = "fwid")))]
+    pub fwid_list: Vec<Fwid>,
+
+    #[knus(child)]
+    pub flags: Option<OperationalFlagsAmd>,
+
+    #[knus(child, unwrap(argument))]
+    pub r#type: Option<String>,
+}
+
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
 pub struct Fwid {
     #[knus(child, unwrap(argument))]
     pub digest_algorithm: DigestAlgorithm,
 
     #[knus(child, unwrap(argument))]
     pub digest: String,
+}
+
+#[derive(knus::Decode, Debug, PartialEq, Eq)]
+pub struct OperationalFlagsAmd {
+    #[knus(child)]
+    pub a: bool,
+
+    #[knus(child)]
+    pub b: bool,
+
+    #[knus(child)]
+    pub c: bool,
+
+    #[knus(child)]
+    pub d: bool,
+
+    #[knus(child)]
+    pub e: bool,
+
+    #[knus(child)]
+    pub f: bool,
+
+    #[knus(child)]
+    pub g: bool,
+
+    #[knus(child)]
+    pub h: bool,
 }
 
 impl TryFrom<&CertificatePolicy> for PolicyInformation {

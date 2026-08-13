@@ -5,7 +5,7 @@
 use const_oid::{AssociatedOid, ObjectIdentifier};
 use der::Sequence;
 use digest::{typenum::Unsigned, Digest, OutputSizeUser};
-use flagset::FlagSet;
+use flagset::{flags, FlagSet};
 use ipnet::IpNet;
 use miette::{IntoDiagnostic, Result, WrapErr};
 use sha1::Sha1;
@@ -15,7 +15,7 @@ use x509_cert::{
     attr::AttributeTypeAndValue,
     der::{
         self,
-        asn1::{OctetString, PrintableStringRef, SetOfVec, Utf8StringRef},
+        asn1::{BitString, Int, OctetString, PrintableStringRef, SetOfVec, Utf8StringRef},
         Decode as _, Encode as _,
     },
     ext::pkix::{
@@ -191,6 +191,9 @@ impl dyn Extension {
             }
             config::X509Extensions::DiceTcbInfo(c) => {
                 Ok(Box::new(DiceTcbInfoExtension::from_config(c)?))
+            }
+            config::X509Extensions::DiceTcbInfoAmd(c) => {
+                Ok(Box::new(DiceTcbInfoAmdExtension::from_config(c)?))
             }
             config::X509Extensions::SubjectAltName(x) => {
                 Ok(Box::new(SubjectAltNameExtension::from_config(x)?))
@@ -583,6 +586,16 @@ impl Fwid {
     }
 }
 
+// newtype would make sense here but we can only derive `Sequence`
+// on structs w/ named fields
+//
+// DICE Attestation Architecture §6.1.1:
+// FWIDLIST ::== SEQUENCE SIZE (1..MAX) OF FWID
+#[derive(Debug, Sequence)]
+pub struct FwidList {
+    fwids: Vec<Fwid>,
+}
+
 // NOTE: All fields in this structure are optional and we only implement
 // support for the ones that we currently need. Additional fields should
 // be added as needed.
@@ -640,6 +653,200 @@ impl DiceTcbInfoExtension {
             .wrap_err("fwid list to DER")?;
 
         Ok(DiceTcbInfoExtension {
+            der,
+            is_critical: config.critical,
+        })
+    }
+}
+
+// The flags field from the AMD DiceTcbInfo extension are a single byte while
+// the current DICE Attestation Architecture spec (v1.2) uses 4 bytes. The
+// significance of the fields in this structure are probably similar to the
+// current DICE Attestation Architecture spec (v1.2). Guessing would be bad
+// though, so we name them alphabetically starting from the beginning.
+flags! {
+    pub enum OperationalFlagAmd: u8 {
+        A = 1 << 0,
+        B = 1 << 1,
+        C = 1 << 2,
+        D = 1 << 3,
+        E = 1 << 4,
+        F = 1 << 5,
+        G = 1 << 6,
+        H = 1 << 7,
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct OperationalFlagsAmd(pub FlagSet<OperationalFlagAmd>);
+
+// the underlying `FlagSet` support in x509-cert does the heavy lifting
+impl der::EncodeValue for OperationalFlagsAmd {
+    fn encode_value(&self, encoder: &mut impl der::Writer) -> ::der::Result<()> {
+        self.0.encode_value(encoder)
+    }
+
+    fn value_len(&self) -> der::Result<der::Length> {
+        self.0.value_len()
+    }
+}
+
+impl OperationalFlagsAmd {
+    pub fn from_config(config: &config::OperationalFlagsAmd) -> Result<Self> {
+        let mut op_flags = FlagSet::default();
+        if config.a {
+            op_flags |= OperationalFlagAmd::A
+        }
+
+        if config.b {
+            op_flags |= OperationalFlagAmd::B
+        }
+
+        if config.c {
+            op_flags |= OperationalFlagAmd::C
+        }
+
+        if config.d {
+            op_flags |= OperationalFlagAmd::D
+        }
+
+        if config.e {
+            op_flags |= OperationalFlagAmd::E
+        }
+
+        if config.f {
+            op_flags |= OperationalFlagAmd::F
+        }
+
+        if config.g {
+            op_flags |= OperationalFlagAmd::G
+        }
+
+        if config.h {
+            op_flags |= OperationalFlagAmd::H
+        }
+
+        Ok(Self(op_flags))
+    }
+}
+
+// DiceTcbInfo structure as found in cert chains produced by the DPE in the
+// AMD Turin platform. This is similar to the structure defined by the TCG DICE
+// Attestation Architecture spec, but still different.
+#[derive(Debug, Sequence)]
+pub struct DiceTcbInfoAmd {
+    #[asn1(context_specific = "0", tag_mode = "EXPLICIT", optional = "true")]
+    vendor: Option<String>,
+
+    #[asn1(context_specific = "1", tag_mode = "EXPLICIT", optional = "true")]
+    model: Option<String>,
+
+    #[asn1(context_specific = "4", tag_mode = "EXPLICIT", optional = "true")]
+    layer: Option<Int>,
+
+    #[asn1(context_specific = "5", tag_mode = "EXPLICIT", optional = "true")]
+    index: Option<Int>,
+
+    #[asn1(context_specific = "6", tag_mode = "IMPLICIT", optional = "true")]
+    fwids: Option<FwidList>,
+
+    #[asn1(context_specific = "7", tag_mode = "EXPLICIT", optional = "true")]
+    flags: Option<BitString>,
+
+    #[asn1(context_specific = "9", tag_mode = "EXPLICIT", optional = "true")]
+    r#type: Option<OctetString>,
+}
+
+#[derive(Debug)]
+pub struct DiceTcbInfoAmdExtension {
+    der: Vec<u8>,
+    is_critical: bool,
+}
+
+impl Extension for DiceTcbInfoAmdExtension {
+    fn oid(&self) -> ObjectIdentifier {
+        Self::OID
+    }
+
+    fn is_critical(&self) -> bool {
+        self.is_critical
+    }
+
+    fn as_der(&self) -> &[u8] {
+        &self.der
+    }
+}
+
+impl DiceTcbInfoAmdExtension {
+    // tcg-dice-TcbInfo from ASN.1 in DICE Attestation Architecture §6.1.1
+    const OID: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.23.133.5.4.1");
+
+    pub fn from_config(config: &config::DiceTcbInfoAmdExtension) -> Result<Self> {
+        let vendor = config.vendor.clone();
+
+        let model = config.model.clone();
+
+        let layer = if let Some(l) = config.layer {
+            let bytes = l.to_be_bytes();
+            Some(Int::new(&bytes).into_diagnostic()?)
+        } else {
+            None
+        };
+
+        let index = if let Some(l) = config.index {
+            let bytes = l.to_be_bytes();
+            Some(Int::new(&bytes).into_diagnostic()?)
+        } else {
+            None
+        };
+
+        let mut fwids: Vec<Fwid> = Vec::new();
+
+        for fwid in &config.fwid_list {
+            let fwid = Fwid::from_config(fwid).wrap_err("Fwid from config")?;
+
+            fwids.push(fwid);
+        }
+
+        let fwids = if !fwids.is_empty() {
+            Some(FwidList { fwids })
+        } else {
+            None
+        };
+
+        let flags = if let Some(flags) = &config.flags {
+            let flags = OperationalFlagsAmd::from_config(flags)?;
+            let flags = flags.0.bits().to_be_bytes();
+            Some(BitString::new(0, flags).into_diagnostic()?)
+        } else {
+            None
+        };
+
+        let r#type = if let Some(r#type) = &config.r#type {
+            let digest = hex::decode(r#type)
+                .into_diagnostic()
+                .wrap_err("Decode 'type' octet string")?;
+            Some(OctetString::new(digest).into_diagnostic()?)
+        } else {
+            None
+        };
+
+        let tcb_info = DiceTcbInfoAmd {
+            vendor,
+            model,
+            layer,
+            index,
+            fwids,
+            flags,
+            r#type,
+        };
+
+        let der = tcb_info
+            .to_der()
+            .into_diagnostic()
+            .wrap_err("fwid list to DER")?;
+
+        Ok(Self {
             der,
             is_critical: config.critical,
         })
