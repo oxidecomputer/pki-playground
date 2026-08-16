@@ -188,7 +188,7 @@ impl ValidDocument {
             };
 
             let issuer_dn = if let Some(issuer_cert) = &issuer_cert {
-                issuer_cert.tbs_certificate.subject.clone()
+                issuer_cert.tbs_certificate().subject().clone()
             } else {
                 entities
                     .get(cert_config.issuer_entity.as_ref().unwrap())
@@ -218,10 +218,7 @@ impl ValidDocument {
                 UtcTime::try_from(not_before).into_diagnostic()?.into()
             };
 
-            let validity = Validity {
-                not_before,
-                not_after,
-            };
+            let validity = Validity::new(not_before, not_after);
 
             let signature_algorithm =
                 issuer_kp.signature_algorithm(cert_config.digest_algorithm.as_ref())?;
@@ -270,12 +267,16 @@ impl ValidDocument {
                             .into_diagnostic()?,
                     };
 
-                    let mut ext_vec = if let Some(x) = tbs_cert.extensions {
+                    let mut ext_vec = if let Some(x) = tbs_cert.extensions() {
                         x.clone()
                     } else {
                         Vec::new()
                     };
                     ext_vec.push(cert_extension);
+                    // TODO: we assume that the extensions in a `Certificate`
+                    // can be modified / reassigned after instantiating it.
+                    // The new version is more strict. Look into the
+                    // `x509_cert::builder::CertificateBuilder`.
                     tbs_cert.extensions = Some(ext_vec);
                 }
             }

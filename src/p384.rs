@@ -8,6 +8,7 @@ use digest::Digest;
 use miette::{IntoDiagnostic, Result};
 use p384::{
     ecdsa::{Signature, SigningKey},
+    elliptic_curve::Generate,
     SecretKey,
 };
 use pkcs8::{DecodePrivateKey, EncodePrivateKey, EncodePublicKey};
@@ -21,8 +22,7 @@ pub struct P384KeyPair {
 
 impl P384KeyPair {
     pub fn new(name: &str) -> Result<Self> {
-        let mut rng = rand::thread_rng();
-        let private_key = SecretKey::random(&mut rng);
+        let private_key = SecretKey::generate_from_rng(&mut rand::rng());
 
         Ok(P384KeyPair {
             name: name.into(),

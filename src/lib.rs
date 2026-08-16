@@ -148,12 +148,15 @@ impl<'a> TryFrom<&'a config::Entity> for Entity {
         let mut brdns = RdnSequence::default();
         for rdn in rdns {
             let sofv = SetOfVec::try_from(rdn).into_diagnostic()?;
-            brdns.0.push(RelativeDistinguishedName::from(sofv));
+            brdns.push(RelativeDistinguishedName::from(sofv));
         }
 
         Ok(Self {
             name: value.name.clone(),
-            distinguished_name: brdns,
+            // This constructor is now behind the `hazmat` feature: we're
+            // responsible for ensuring that the RDNSequence satisfies the
+            // requirements of RFC 5280.
+            distinguished_name: Name::hazmat_from_rdn_sequence(brdns),
         })
     }
 }
@@ -374,7 +377,7 @@ impl SubjectKeyIdentifierExtension {
         tbs_cert: &TbsCertificate,
     ) -> Result<Self> {
         let subject_pub_key = tbs_cert
-            .subject_public_key_info
+            .subject_public_key_info()
             .subject_public_key
             .as_bytes()
             .unwrap();
@@ -415,7 +418,7 @@ pub struct AuthorityKeyIdentifierExtension {
 impl AuthorityKeyIdentifierExtension {
     pub fn from_config(
         config: &config::AuthorityKeyIdentifierExtension,
-        _tbs_cert: &TbsCertificate,
+        tbs_cert: &TbsCertificate,
         issuer_cert: Option<&Certificate>,
     ) -> Result<Self> {
         let mut authority_key_identifier = None;
@@ -423,9 +426,9 @@ impl AuthorityKeyIdentifierExtension {
         let mut authority_cert_serial_number = None;
 
         let issuer_tbs = if let Some(issuer_cert) = issuer_cert {
-            &issuer_cert.tbs_certificate
-        } else if _tbs_cert.subject == _tbs_cert.issuer {
-            _tbs_cert
+            &issuer_cert.tbs_certificate()
+        } else if tbs_cert.subject() == tbs_cert.issuer() {
+            tbs_cert
         } else {
             return Err(miette::miette!(
                 "Authority Key Identifier extension requested but no issuer certificate specified"
@@ -434,13 +437,13 @@ impl AuthorityKeyIdentifierExtension {
 
         if config.issuer {
             authority_cert_issuer = Some(vec![
-                x509_cert::ext::pkix::name::GeneralName::DirectoryName(issuer_tbs.subject.clone()),
+                x509_cert::ext::pkix::name::GeneralName::DirectoryName(issuer_tbs.subject().clone()),
             ]);
-            authority_cert_serial_number = Some(issuer_tbs.serial_number.clone());
+            authority_cert_serial_number = Some(issuer_tbs.serial_number().clone());
         }
 
         if config.key_id {
-            if let Some(extensions) = &issuer_tbs.extensions {
+            if let Some(extensions) = issuer_tbs.extensions() {
                 for extension in extensions {
                     if extension.extn_id == x509_cert::ext::pkix::SubjectKeyIdentifier::OID {
                         let ski = x509_cert::ext::pkix::SubjectKeyIdentifier::from_der(

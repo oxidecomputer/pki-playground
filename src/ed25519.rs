@@ -18,8 +18,7 @@ pub struct Ed25519KeyPair {
 
 impl Ed25519KeyPair {
     pub fn new(name: &str) -> Self {
-        let mut rng = rand::thread_rng();
-        let signing_key = SigningKey::generate(&mut rng);
+        let signing_key = SigningKey::generate(&mut rand::rng());
 
         Ed25519KeyPair {
             name: name.into(),

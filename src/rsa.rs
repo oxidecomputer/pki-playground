@@ -10,7 +10,7 @@ use miette::{IntoDiagnostic, Result};
 use pkcs8::{DecodePrivateKey, EncodePrivateKey, EncodePublicKey};
 use rsa::{
     traits::{PublicKeyParts, SignatureScheme},
-    BigUint, RsaPrivateKey,
+    BoxedUint, RsaPrivateKey,
 };
 use zeroize::Zeroizing;
 
@@ -21,9 +21,9 @@ pub struct RsaKeyPair {
 
 impl RsaKeyPair {
     pub fn new(name: &str, config: &config::RsaKeyConfig) -> Result<Self> {
-        let mut rng = rand::thread_rng();
+        let exp: u64 = config.public_exponent.try_into().into_diagnostic()?;
         let private_key =
-            RsaPrivateKey::new_with_exp(&mut rng, config.num_bits, &config.public_exponent.into())
+            RsaPrivateKey::new_with_exp(&mut rand::rng(), config.num_bits, exp.into())
                 .into_diagnostic()?;
 
         Ok(RsaKeyPair {
@@ -42,7 +42,8 @@ impl RsaKeyPair {
             )
         }
 
-        if private_key.e() != &BigUint::from(config.public_exponent) {
+        let exp: u64 = config.public_exponent.try_into().into_diagnostic()?;
+        if private_key.e() != &BoxedUint::from(exp) {
             miette::bail!(
                 "PEM-encoded RSA private key has public exponent {} but config specifies {}",
                 private_key.e(),
@@ -115,25 +116,22 @@ impl KeyPair for RsaKeyPair {
             config::DigestAlgorithm::Sha_256 => {
                 let hash = sha2::Sha256::new().chain_update(bytes).finalize();
                 let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha256>();
-                let mut rng = rand::thread_rng();
                 signer
-                    .sign(Some(&mut rng), &self.private_key, &hash)
+                    .sign(Some(&mut rand::rng()), &self.private_key, &hash)
                     .into_diagnostic()
             }
             config::DigestAlgorithm::Sha_384 => {
                 let hash = sha2::Sha384::new().chain_update(bytes).finalize();
                 let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha384>();
-                let mut rng = rand::thread_rng();
                 signer
-                    .sign(Some(&mut rng), &self.private_key, &hash)
+                    .sign(Some(&mut rand::rng()), &self.private_key, &hash)
                     .into_diagnostic()
             }
             config::DigestAlgorithm::Sha_512 => {
                 let hash = sha2::Sha512::new().chain_update(bytes).finalize();
                 let signer = rsa::pkcs1v15::Pkcs1v15Sign::new::<rsa::sha2::Sha512>();
-                let mut rng = rand::thread_rng();
                 signer
-                    .sign(Some(&mut rng), &self.private_key, &hash)
+                    .sign(Some(&mut rand::rng()), &self.private_key, &hash)
                     .into_diagnostic()
             }
             d => Err(miette::miette!("Unsupported digest algorithm: {:?}", d)),
