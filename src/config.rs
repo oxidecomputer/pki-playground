@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use camino::Utf8Path;
-use miette::{IntoDiagnostic, Result};
+use miette::{miette, IntoDiagnostic, Result};
+use std::path::Path;
 use x509_cert::{ext::pkix::certpolicy::PolicyInformation, spki::ObjectIdentifier};
 
 use crate::ValidDocument;
@@ -429,8 +429,12 @@ pub struct NameConstraintsExtension {
     pub excluded: Option<Vec<GeneralName>>,
 }
 
-pub fn load_and_validate(path: &Utf8Path) -> Result<ValidDocument> {
+pub fn load_and_validate<P: AsRef<Path>>(path: P) -> Result<ValidDocument> {
+    let path: &str = path
+        .as_ref()
+        .to_str()
+        .ok_or_else(|| miette!("Failed to convert Path to str"))?;
     let in_kdl = std::fs::read_to_string(path).into_diagnostic()?;
-    let doc: Document = knus::parse(path.as_str(), &in_kdl)?;
+    let doc: Document = knus::parse(path, &in_kdl)?;
     ValidDocument::validate(doc)
 }
