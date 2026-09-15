@@ -11,7 +11,7 @@ camino = { version = "1.2.3" }
 clap = { version = "4.6.1", features = ["derive"] }
 const-oid = { version = "0.9.6", features = ["db"] }
 der = { version = "0.7.9", features = ["std"] }
-digest = "0.10.7"
+digest = "0.11.3"
 ed25519-dalek = { version = "2.2.0", features = ["pem", "rand_core", "std", "zeroize"] }
 flagset = "0.4.7"
 hex = "0.4.3"
