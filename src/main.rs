@@ -22,10 +22,30 @@ struct Options {
 #[allow(clippy::enum_variant_names)]
 #[derive(clap::Subcommand)]
 enum Action {
+    GenerateAll(GenerateAllOpts),
     GenerateKeyPairs(GenerateKeyPairsOpts),
     GenerateCertificateRequests(GenerateCertificateRequestsOpts),
     GenerateCertificates(GenerateCertificatesOpts),
     GenerateCertificateLists(GenerateCertificateListsOpts),
+}
+
+#[derive(clap::Args)]
+struct GenerateAllOpts {
+    /// action to take if a key pair output file already exists
+    #[arg(long, default_value = "skip")]
+    key_pair_output_exists: OutputFileExistsBehavior,
+
+    /// action to take if a certificate request output file already exists
+    #[arg(long, default_value = "overwrite")]
+    csr_output_exists: OutputFileExistsBehavior,
+
+    /// action to take if a certificate output file already exists
+    #[arg(long, default_value = "overwrite")]
+    cert_output_exists: OutputFileExistsBehavior,
+
+    /// action to take if a certificate list output file already exists
+    #[arg(long, default_value = "overwrite")]
+    cert_list_output_exists: OutputFileExistsBehavior,
 }
 
 #[derive(clap::Args)]
@@ -70,6 +90,12 @@ fn main() -> Result<()> {
     let dir = opts.out_dir;
 
     match opts.action {
+        Action::GenerateAll(action_opts) => {
+            doc.write_key_pairs(&dir, action_opts.key_pair_output_exists)?;
+            doc.write_certificate_requests(&dir, action_opts.csr_output_exists)?;
+            doc.write_certificates(&dir, action_opts.cert_output_exists)?;
+            doc.write_certificate_lists(&dir, action_opts.cert_list_output_exists)
+        }
         Action::GenerateCertificateLists(action_opts) => {
             doc.write_certificate_lists(&dir, action_opts.output_exists)
         }
