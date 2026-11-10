@@ -2,6 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// work around: https://github.com/zkat/miette/issues/477
+#![allow(semicolon_in_expressions_from_non_local_macros)]
+
 use crate::{Entity, Extension, KeyPair};
 use clap::ValueEnum;
 use miette::{miette, Context, IntoDiagnostic, Result};
